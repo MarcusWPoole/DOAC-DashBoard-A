@@ -14,7 +14,7 @@ app.add_middleware(
 )
 
 # ——— Load real episodes data ———
-df = pd.read_json("episodes_with_guests.json", convert_dates=["release_date"])
+df = pd.read_json("episodes_cleaned.json", convert_dates=["release_date"])
 
 @app.get("/api/episodes")
 def read_episodes():
