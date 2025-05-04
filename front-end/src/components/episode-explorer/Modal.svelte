@@ -28,22 +28,43 @@
   
   
   {#if show}
-    <div 
-      class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      on:click={handleBackdropClick}
-    >
-      <div class="bg-[#1A1A1A] rounded-xl shadow-2xl w-full max-w-2xl border border-[#2A2A2A] overflow-hidden">
-        <!-- Header -->
-        <div class="p-6 border-b border-[#2A2A2A] flex justify-between items-start">
-          <div>
-            <h3 class="text-2xl font-bold">Episode #{episode.episode}</h3>
-            <p class="text-gray-400 mt-1">{formatDate(episode.date)}</p>
+  <div 
+  class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+  on:click={handleBackdropClick}
+>
+  <div class="bg-[#1A1A1A] rounded-xl shadow-2xl w-full max-w-2xl border border-[#2A2A2A] overflow-hidden">
+    <!-- Header with Thumbnail -->
+    <div class="p-6 border-b border-[#2A2A2A]">
+      <div class="flex gap-6">
+        <div class="w-32 h-32 bg-gradient-to-br from-[#2A2A2A] to-[#1A1A1A] rounded-lg flex items-center justify-center relative overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+          <img 
+            src={episode.thumbnail} 
+            alt={`Episode ${episode.episode} thumbnail`}
+            class="w-full h-full object-cover"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+          />
+          <div class="hidden absolute inset-0 items-center justify-center">
+            <span class="text-4xl">🎙️</span>
           </div>
-          <button 
-            class="text-gray-400 hover:text-white transition-colors"
-            on:click={closeModal}
-          >✕</button>
         </div>
+        
+        <div class="flex-1">
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="text-2xl font-bold">Episode #{episode.episode}</h3>
+              <p class="text-gray-400 mt-1">{formatDate(episode.date)}</p>
+            </div>
+            <button 
+              class="text-gray-400 hover:text-white transition-colors"
+              on:click={closeModal}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
         
         <!-- Content -->
         <div class="p-6 space-y-6">

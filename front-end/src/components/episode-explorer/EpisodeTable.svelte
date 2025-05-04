@@ -75,7 +75,7 @@
             <tr class="hover:bg-gray-700 cursor-pointer" on:click={() => selectEpisode(ep)}>
               <td class="px-2 py-2 text-center">#{ep.episode}</td>
               <td class="px-2 py-2">
-                <img src={ep.thumbnail} alt="" class="w-10 h-10 object-cover rounded" />
+                <img src={ep.thumbnail} alt="" class="w-full h-full object-cover" />
               </td>
               <td class="px-3 py-2">
                 <div class="line-clamp-2">{ep.title}</div>
