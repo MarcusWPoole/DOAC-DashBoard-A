@@ -36,7 +36,7 @@
     <!-- Header with Thumbnail -->
     <div class="p-6 border-b border-[#2A2A2A]">
       <div class="flex gap-6">
-        <div class="w-32 h-32 bg-gradient-to-br from-[#2A2A2A] to-[#1A1A1A] rounded-lg flex items-center justify-center relative overflow-hidden">
+        <div class="w-72 h-40 bg-gradient-to-br from-[#2A2A2A] to-[#1A1A1A] rounded-lg flex items-center justify-center relative overflow-hidden">
           <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
           <img 
             src={episode.thumbnail} 
@@ -44,9 +44,6 @@
             class="w-full h-full object-cover"
             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
           />
-          <div class="hidden absolute inset-0 items-center justify-center">
-            <span class="text-4xl">🎙️</span>
-          </div>
         </div>
         
         <div class="flex-1">
@@ -96,8 +93,8 @@
               <h5 class="text-sm font-semibold text-gray-400 mb-3">Engagement</h5>
               <div class="space-y-3">
                 <div>
-                  <p class="text-sm text-gray-400">Watch %</p>
-                  <p class="text-xl font-bold">{episode.avgViewDuration}%</p>
+                  <p class="text-sm text-gray-400">Average View Duration</p>
+                  <p class="text-xl font-bold">{episode.avgViewTime}</p>
                 </div>
                 <div>
                   <p class="text-sm text-gray-400">Subs Gained</p>
@@ -157,7 +154,7 @@
           <div class="space-y-4">
             <div>
               <div class="flex justify-between text-sm mb-1">
-                <span class="text-gray-400">Watch %</span>
+                <span class="text-gray-400">Average View  %</span>
                 <span class="font-semibold">{episode.avgViewDuration}%</span>
               </div>
               <div class="h-2 bg-[#2A2A2A] rounded-full overflow-hidden">

@@ -18,12 +18,12 @@
     }
   
     // Helpers
-    const fmtNum = n => {
+    const formatNumber = n => {
       if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
       if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
       return n.toString();
     };
-    const fmtDate = s => format(new Date(s), 'MMM d, yyyy');
+    const formatDate = s => format(new Date(s), 'MMM d, yyyy');
   
     // Row click → open modal
     function selectEpisode(ep) {
@@ -81,8 +81,8 @@
                 <div class="line-clamp-2">{ep.title}</div>
               </td>
               <td class="px-3 py-2 truncate">{ep.guest || 'N/A'}</td>
-              <td class="px-3 py-2">{fmtDate(ep.date)}</td>
-              <td class="px-2 py-2 text-right">{fmtNum(ep.views)}</td>
+              <td class="px-3 py-2">{formatDate(ep.date)}</td>
+              <td class="px-2 py-2 text-right">{formatNumber(ep.views)}</td>
             </tr>
           {/each}
         {/if}
@@ -92,7 +92,7 @@
   
   <!-- Episode details modal -->
   {#if showModal && selectedEpisode}
-  <Modal bind:show={showModal} episode={selectedEpisode} {fmtNum} {fmtDate} />
+  <Modal bind:show={showModal} episode={selectedEpisode} {formatNumber} {formatDate} />
 {/if}
   
   <style>

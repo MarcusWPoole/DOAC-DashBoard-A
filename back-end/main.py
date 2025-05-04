@@ -77,6 +77,7 @@ def read_episodes(
             "shares":          int(r["shares"]),
             "likes":           int(r.get("likes", 0)),
             "dislikes":        int(r.get("dislikes", 0)),
+            "avgViewTime":     float(r.get("averageViewDuration")),
             "avgViewDuration": float(r.get("averageViewPercentage", 0)),
             "subsGained":      int(r.get("subscribersGained", 0)),
             "subsLost":        int(r.get("subscribersLost", 0)),
