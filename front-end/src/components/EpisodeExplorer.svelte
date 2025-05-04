@@ -147,8 +147,8 @@
     <!-- Filters (date range + metric selector + metric-range sliders) -->
     <EpisodeFilters
       {dateRange}
-      minMetric={metricMin}
-      maxMetric={metricMax}
+      metricMin={metricMin}
+      metricMax={metricMax}
       {selectedMetric}
       metricOptions={metricOptions}
       on:filterUpdate={e => applyFilters(e.detail)}
