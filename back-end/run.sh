@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# backend/run.sh
 
-# Activate your virtualenv if you use one:
-# source .venv/bin/activate
+# Activate the virtual environment
+source "$(dirname "$0")/.venv/bin/activate"
 
-uvicorn main:app --reload --host 127.0.0.1 --port 8000
+# Launch the FastAPI app
+python3 -m uvicorn main:app --reload --host 127.0.0.1 --port 8001

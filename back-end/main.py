@@ -8,10 +8,13 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # your dev URL
+    allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 
 # ——— Load real episodes data ———
 df = pd.read_json("episodes_cleaned.json", convert_dates=["release_date"])
@@ -21,9 +24,9 @@ def read_episodes():
     out = []
     for _, r in df.iterrows():
         out.append({
-            "episode":         int(r["episode_id"]),
+            "episode":         int(r["episode_num"]),      # use episode_num as numeric ID
             "title":           r["episode_name"],
-            "guest":           r.get("extracted_guest") or None,
+            "guest":           r.get("guest") or None,
             "date":            r["release_date"].strftime("%Y-%m-%d"),
             "views":           int(r["views"]),
             "shares":          int(r["shares"]),
