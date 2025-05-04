@@ -1,97 +1,107 @@
 <script>
     import { format } from 'date-fns';
+    import Modal from './Modal.svelte';
   
     export let data = [];
     export let sortField = 'views';
     export let sortDirection = 'desc';
     export let onSort = () => {};
   
-    // Toggle sort or change field
+    // Modal state
+    let showModal = false;
+    let selectedEpisode = null;
+  
+    // Sorting
     function handleSort(field) {
       const newDir = field === sortField && sortDirection === 'desc' ? 'asc' : 'desc';
       onSort(field, newDir);
     }
   
-    // Format large numbers
-    function formatNumber(num) {
-      if (num >= 1_000_000) return (num/1_000_000).toFixed(1)+'M';
-      if (num >=   1_000) return (num/1_000).toFixed(1)+'K';
-      return num.toString();
-    }
+    // Helpers
+    const fmtNum = n => {
+      if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
+      if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+      return n.toString();
+    };
+    const fmtDate = s => format(new Date(s), 'MMM d, yyyy');
   
-    // Format date strings
-    function formatDate(dateStr) {
-      return format(new Date(dateStr), 'MMM d, yyyy');
+    // Row click → open modal
+    function selectEpisode(ep) {
+      selectedEpisode = ep;
+      showModal = true;
     }
+
+    function handleRowClick(episode) {
+    selectedEpisode = episode;
+    showModal = true;
+  }
   </script>
   
-  <div class="overflow-x-auto">
-    <table class="min-w-full text-left">
-      <thead class="bg-gray-800 text-gray-200">
+  <div class="overflow-x-auto border rounded-lg">
+    <table class="min-w-full table-fixed">
+      <colgroup>
+        <col style="width:48px" />
+        <col style="width:56px" />
+        <col style="width:240px" />
+        <col style="width:140px" />
+        <col style="width:120px" />
+        <col style="width:96px" />
+      </colgroup>
+      <thead class="sticky top-0 bg-gray-800 text-gray-200">
         <tr>
-          <th class="px-4 py-2 cursor-pointer" on:click={() => handleSort('episode')}>
-            #
-            {#if sortField==='episode'}<span>{sortDirection==='desc'?' ↓':' ↑'}</span>{/if}
+          <th class="px-2 py-3 cursor-pointer" on:click={() => handleSort('episode')}>
+            # {sortField==='episode'?(sortDirection==='desc'?'↓':'↑'):''}
           </th>
-          <th class="px-4 py-2">Title</th>
-          <th class="px-4 py-2">Guest</th>
-          <th class="px-4 py-2 cursor-pointer" on:click={() => handleSort('date')}>
-            Date
-            {#if sortField==='date'}<span>{sortDirection==='desc'?' ↓':' ↑'}</span>{/if}
+          <th class="px-2 py-3">Img</th>
+          <th class="px-3 py-3 cursor-pointer" on:click={() => handleSort('title')}>
+            Title {sortField==='title'?(sortDirection==='desc'?'↓':'↑'):''}
           </th>
-          <th class="px-4 py-2 cursor-pointer" on:click={() => handleSort('views')}>
-            Views
-            {#if sortField==='views'}<span>{sortDirection==='desc'?' ↓':' ↑'}</span>{/if}
+          <th class="px-3 py-3 cursor-pointer" on:click={() => handleSort('guest')}>
+            Guest {sortField==='guest'?(sortDirection==='desc'?'↓':'↑'):''}
           </th>
-          <th class="px-4 py-2 cursor-pointer" on:click={() => handleSort('shares')}>
-            Shares
-            {#if sortField==='shares'}<span>{sortDirection==='desc'?' ↓':' ↑'}</span>{/if}
+          <th class="px-3 py-3 cursor-pointer" on:click={() => handleSort('date')}>
+            Date {sortField==='date'?(sortDirection==='desc'?'↓':'↑'):''}
           </th>
-          <th class="px-4 py-2 cursor-pointer" on:click={() => handleSort('likes')}>
-            Likes
-            {#if sortField==='likes'}<span>{sortDirection==='desc'?' ↓':' ↑'}</span>{/if}
-          </th>
-          <th class="px-4 py-2 cursor-pointer" on:click={() => handleSort('dislikes')}>
-            Dislikes
-            {#if sortField==='dislikes'}<span>{sortDirection==='desc'?' ↓':' ↑'}</span>{/if}
-          </th>
-          <th class="px-4 py-2 cursor-pointer" on:click={() => handleSort('avgViewDuration')}>
-            Watch %
-            {#if sortField==='avgViewDuration'}<span>{sortDirection==='desc'?' ↓':' ↑'}</span>{/if}
-          </th>
-          <th class="px-4 py-2 cursor-pointer" on:click={() => handleSort('subsGained')}>
-            Subs Gained
-            {#if sortField==='subsGained'}<span>{sortDirection==='desc'?' ↓':' ↑'}</span>{/if}
-          </th>
-          <th class="px-4 py-2 cursor-pointer" on:click={() => handleSort('subsLost')}>
-            Subs Lost
-            {#if sortField==='subsLost'}<span>{sortDirection==='desc'?' ↓':' ↑'}</span>{/if}
+          <th class="px-2 py-3 cursor-pointer" on:click={() => handleSort('views')}>
+            Views {sortField==='views'?(sortDirection==='desc'?'↓':'↑'):''}
           </th>
         </tr>
       </thead>
-      <tbody class="text-gray-100">
+      <tbody class="divide-y divide-gray-700 text-gray-100">
         {#if data.length === 0}
-          <tr>
-            <td colspan="11" class="py-8 text-center">No episodes match your filters</td>
-          </tr>
+          <tr><td colspan="6" class="py-8 text-center">No episodes match your filters</td></tr>
         {:else}
           {#each data as ep}
-            <tr class="hover:bg-gray-700 transition-colors">
-              <td class="px-4 py-2">#{ep.episode}</td>
-              <td class="px-4 py-2 max-w-xs truncate" title={ep.title}>{ep.title}</td>
-              <td class="px-4 py-2">{ep.guest || 'N/A'}</td>
-              <td class="px-4 py-2">{formatDate(ep.date)}</td>
-              <td class="px-4 py-2">{formatNumber(ep.views)}</td>
-              <td class="px-4 py-2">{formatNumber(ep.shares)}</td>
-              <td class="px-4 py-2">{formatNumber(ep.likes)}</td>
-              <td class="px-4 py-2">{formatNumber(ep.dislikes)}</td>
-              <td class="px-4 py-2">{ep.avgViewDuration}%</td>
-              <td class="px-4 py-2">{formatNumber(ep.subsGained)}</td>
-              <td class="px-4 py-2">{formatNumber(ep.subsLost)}</td>
+            <tr class="hover:bg-gray-700 cursor-pointer" on:click={() => selectEpisode(ep)}>
+              <td class="px-2 py-2 text-center">#{ep.episode}</td>
+              <td class="px-2 py-2">
+                <img src={ep.thumbnail} alt="" class="w-10 h-10 object-cover rounded" />
+              </td>
+              <td class="px-3 py-2">
+                <div class="line-clamp-2">{ep.title}</div>
+              </td>
+              <td class="px-3 py-2 truncate">{ep.guest || 'N/A'}</td>
+              <td class="px-3 py-2">{fmtDate(ep.date)}</td>
+              <td class="px-2 py-2 text-right">{fmtNum(ep.views)}</td>
             </tr>
           {/each}
         {/if}
       </tbody>
     </table>
   </div>
+  
+  <!-- Episode details modal -->
+  {#if showModal && selectedEpisode}
+  <Modal bind:show={showModal} episode={selectedEpisode} {fmtNum} {fmtDate} />
+{/if}
+  
+  <style>
+    /* Two-line clamp for titles */
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  </style>
   

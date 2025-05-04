@@ -79,7 +79,8 @@ def read_episodes(
             "dislikes":        int(r.get("dislikes", 0)),
             "avgViewDuration": float(r.get("averageViewPercentage", 0)),
             "subsGained":      int(r.get("subscribersGained", 0)),
-            "subsLost":        int(r.get("subscribersLost", 0))
+            "subsLost":        int(r.get("subscribersLost", 0)),
+            "thumbnail":       r.get("thumbnail_url")
         })
 
     return {
