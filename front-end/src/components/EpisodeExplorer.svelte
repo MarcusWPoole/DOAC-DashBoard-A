@@ -39,11 +39,15 @@
   
     // Chart data
     let chartData = { labels: [], datasets: [] };
+
+    let currentPage = 1;
+    const itemsPerPage = 10;
+  
   
     // Helper: format dates for querystring
     const fmt = d => d?.toISOString().split('T')[0];
   
-    // 1) On mount: fetch unfiltered episodes + metric bounds
+    // On mount: fetch unfiltered episodes + metric bounds
     onMount(async () => {
       try {
         const res = await fetch(`http://127.0.0.1:8001/api/episodes?metric=${selectedMetric}`, { mode: 'cors' });
@@ -63,7 +67,7 @@
       }
     });
   
-    // 2) When filters change, re-fetch
+    // When filters change, re-fetch
     async function applyFilters({ dateRange: dr, viewsRange, metric }) {
       dateRange      = dr;
       selectedMetric = metric;
@@ -94,7 +98,7 @@
       }
     }
   
-    // 3) Sorting helper
+    // Sorting helper
     function sortData(field, direction) {
       sortField     = field;
       sortDirection = direction;
@@ -111,7 +115,7 @@
       });
     }
   
-    // 4) Build chart data from filtered & sorted episodes
+   // Build chart data from filtered & sorted episodes
     function updateChartData() {
       const top = filteredData
         .slice()
@@ -133,6 +137,10 @@
         }]
       };
     }
+
+    function handlePageChange(newPage) {
+    currentPage = newPage;
+  }
   </script>
   
   {#if loading}
@@ -154,7 +162,7 @@
       metricOptions={metricOptions}
       on:filterUpdate={e => applyFilters(e.detail)}
     />
-  
+  <div>
     <div class="grid lg:grid-cols-2 gap-6 mt-6">
       <div class="card">
         <h3 class="mb-4 text-lg font-semibold">
@@ -175,12 +183,16 @@
           Showing {filteredData.length} of {episodeData.length} episodes
         </p>
       </div>
-      <EpisodeTable
-        data={filteredData}
-        {sortField}
-        {sortDirection}
-        onSort={sortData}
-      />
+      <EpisodeTable 
+      data={filteredData} 
+      {sortField} 
+      {sortDirection} 
+      onSort={sortData}
+      {currentPage}
+      {itemsPerPage}
+      onPageChange={handlePageChange}
+    />
     </div>
+</div>
   {/if}
   
