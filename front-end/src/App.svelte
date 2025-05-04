@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import Header from './components/Header.svelte';
+  import Navigation from './components/Navigation.svelte';
 
   let activeTab = 'episode-explorer';
   let isLoading = true;
@@ -19,6 +20,14 @@
 
 <main class="min-h-screen pb-12">
   <Header />
+
+  <div class="container mx-auto px-4 mt-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
+      <div class="lg:col-span-3">
+        <Navigation {activeTab} {setActiveTab} />
+      </div>
+    </div>
+  </div>
 </main>
 
 <style>
