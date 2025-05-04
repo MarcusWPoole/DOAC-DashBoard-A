@@ -20,6 +20,12 @@
       }
     }
 
+    function roundNum(value) {
+    const base = Math.floor(value);
+    const frac = value - base;
+    return frac > 0.5 ? base + 1 : base;
+  }
+
       // Calculate like ratio
   $: likeRatio = episode ? Math.round((episode.likes / (episode.likes + episode.dislikes)) * 100) : 0;
   </script>
@@ -94,7 +100,7 @@
               <div class="space-y-3">
                 <div>
                   <p class="text-sm text-gray-400">Average View Duration</p>
-                  <p class="text-xl font-bold">{episode.avgViewTime}</p>
+                  <p class="text-xl font-bold">{roundNum(episode.avgViewTime / 60)} Minutes</p>
                 </div>
                 <div>
                   <p class="text-sm text-gray-400">Subs Gained</p>
