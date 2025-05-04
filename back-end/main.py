@@ -71,7 +71,7 @@ def read_episodes(
         episodes_out.append({
             "episode":         int(r["episode_num"]),
             "title":           r["episode_name"],
-            "guest":           r.get("extracted_guest") or None,
+            "guest":           r.get("guest") or None,
             "date":            r["release_date"].strftime("%Y-%m-%d"),
             "views":           int(r["views"]),
             "shares":          int(r["shares"]),
