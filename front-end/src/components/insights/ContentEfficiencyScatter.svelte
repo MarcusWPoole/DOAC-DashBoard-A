@@ -3,18 +3,20 @@
     import Plotly from 'plotly.js-dist-min';
   
     export let data = [];
+    export let range = '12m';
     let chartDiv;
   
-    $: if (data.length > 0) renderScatter();
+    $: if (data.length > 0 && chartDiv) {
+      Plotly.purge(chartDiv);
+      renderScatter();
+    }
   
     function renderScatter() {
       const views = data.map(d => d.views);
       const durations = data.map(d => d.averageViewDuration);
       const labels = data.map(d => `${d.episode}: ${d.title}`);
       const categories = [...new Set(data.map(d => d.content_efficiency))];
-      const colors = [
-        '#10B981', '#3B82F6', '#F59E0B', '#EF4444'
-      ];
+      const colors = ['#EF4444', '#F59E0B', '#3B82F6', '#10B981'];
   
       const traces = categories.map((category, i) => {
         const filtered = data.filter(d => d.content_efficiency === category);

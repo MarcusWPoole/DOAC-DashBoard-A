@@ -11,7 +11,8 @@
     let correlationData = [];
     let contentEfficiencyData = [];
 
-    let activeRange = '12m'; // default
+
+    let activeRange = 'all'; // default
   
     async function fetchSeasonality(range) {
       const now = new Date();
@@ -44,27 +45,64 @@
       seasonalityData = Object.values(grouped).sort((a, b) => new Date(a.month) - new Date(b.month));
     }
 
-    async function fetchGuestBoxplotData() {
-  const res = await fetch('http://localhost:8001/api/episodes/guest-recurring');
+async function fetchContentEfficiency(range) {
+  const url = new URL('http://localhost:8001/api/episodes/content-efficiency');
+  if (range !== 'all') {
+    const months = range === '6m' ? 6 : 12;
+    const fromDate = new Date();
+    fromDate.setMonth(fromDate.getMonth() - months);
+    url.searchParams.append('date_from', fromDate.toISOString().split('T')[0]);
+  }
+  const res = await fetch(url);
+  contentEfficiencyData = await res.json();
+}
+
+async function fetchGuestBoxplotData(range) {
+  const url = new URL('http://localhost:8001/api/episodes/guest-recurring');
+  if (range !== 'all') {
+    const months = range === '6m' ? 6 : 12;
+    const fromDate = new Date();
+    fromDate.setMonth(fromDate.getMonth() - months);
+    url.searchParams.append('date_from', fromDate.toISOString().split('T')[0]);
+  }
+  const res = await fetch(url);
   guestBoxplotData = await res.json();
 }
 
-async function fetchCorrelationData() {
-  const res = await fetch('http://localhost:8001/api/episodes/correlation');
+async function fetchCorrelationData(range) {
+  const url = new URL('http://localhost:8001/api/episodes/correlation');
+  if (range !== 'all') {
+    const months = range === '6m' ? 6 : 12;
+    const fromDate = new Date();
+    fromDate.setMonth(fromDate.getMonth() - months);
+    url.searchParams.append('date_from', fromDate.toISOString().split('T')[0]);
+  }
+  const res = await fetch(url);
   correlationData = await res.json();
-}
-
-async function fetchContentEfficiency() {
-  const res = await fetch('http://localhost:8001/api/episodes/content-efficiency');
-  contentEfficiencyData = await res.json();
 }
   
 onMount(() => {
   fetchSeasonality(activeRange);
-  fetchGuestBoxplotData();
-  fetchCorrelationData();
-  fetchContentEfficiency();
+  fetchContentEfficiency(activeRange);
+  fetchGuestBoxplotData(activeRange);
+  fetchCorrelationData(activeRange);
 });
+
+$: btnClasses = (range) =>
+    `btn text-sm ${
+      activeRange === range ? 'bg-[#FFD700] text-black' : 'btn-primary'
+    }`;
+
+
+const setRange = (range) => {
+    activeRange = range;
+    fetchSeasonality(range);
+    fetchContentEfficiency(range);
+    fetchGuestBoxplotData(range);
+    fetchCorrelationData(range);
+};
+
+
 
     const keyFindings = [
       {
@@ -90,23 +128,26 @@ onMount(() => {
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold">Insightful Trends</h2>
       <div class="flex space-x-2">
+        <!-- 6-month button -->
         <button
-          class="btn btn-primary text-sm"
-          class:selected={activeRange === '6m'}
-          on:click={() => { activeRange = '6m'; fetchSeasonality('6m'); }}
-        >Last 6 Months</button>
+          class={btnClasses('6m')}
+          on:click={() => setRange('6m')}>
+          Last 6 Months
+        </button>
       
+        <!-- 12-month button -->
         <button
-          class="btn btn-primary text-sm"
-          class:selected={activeRange === '12m'}
-          on:click={() => { activeRange = '12m'; fetchSeasonality('12m'); }}
-        >Last 12 Months</button>
+          class={btnClasses('12m')}
+          on:click={() => setRange('12m')}>
+          Last 12 Months
+        </button>
       
+        <!-- All-time button -->
         <button
-          class="btn btn-primary text-sm"
-          class:selected={activeRange === 'all'}
-          on:click={() => { activeRange = 'all'; fetchSeasonality('all'); }}
-        >All Time</button>
+          class={btnClasses('all')}
+          on:click={() => setRange('all')}>
+          All Time
+        </button>
       </div>
       
     </div>
@@ -138,27 +179,29 @@ onMount(() => {
         <div class="card mt-6">
             <h3 class="text-lg font-semibold mb-4">What Drives Subscriber Changes</h3>
             <p class="text-sm text-gray-400 mb-4">Strong correlation signals to subscriber gains/losses</p>
-            <SubGainBarChart target="subscribersGained" correlationData={correlationData} />
+            <SubGainBarChart target="subscribersGained" correlationData={correlationData} range={activeRange} />
           </div>
           
           <div class="card mt-6">
             <h3 class="text-lg font-semibold mb-4">What Causes Subscriber Loss</h3>
             <p class="text-sm text-gray-400 mb-4">Negative drivers of subscriber churn</p>
-            <SubGainBarChart target="subscribersLost" correlationData={correlationData} />
+            <SubGainBarChart target="subscribersLost" correlationData={correlationData} range={activeRange} />
           </div>
       </div>
       
       <div class="card">
+        <div class="card mt-6">
         <h3 class="text-lg font-semibold mb-4">Returning Guests Analysis</h3>
-        <p class="text-sm text-gray-400 mb-4">Correlation between number of appearances and views to subscribers ratio</p>
-        <GuestBoxplot data={guestBoxplotData} />
+        <p class="text-sm text-gray-400 mb-4">Correlation between number of appearances for a guest and views to subscribers ratio</p>
+        <GuestBoxplot data={guestBoxplotData} range={activeRange} />
       </div>
+    </div>
     </div>
 
     <div class="card mt-6">
         <h3 class="text-lg font-semibold mb-4">Content Efficiency Quadrant</h3>
         <p class="text-sm text-gray-400 mb-4">Based on view count vs. average watch duration</p>
-        <ContentEfficiencyScatter data={contentEfficiencyData} />
+        <ContentEfficiencyScatter data={contentEfficiencyData} range={activeRange} />
       </div>
     
     <div class="card mt-6">

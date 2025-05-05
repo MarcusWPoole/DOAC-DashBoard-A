@@ -28,7 +28,7 @@
     <!-- Total Views -->
     <div class="card">
       <h3 class="text-sm text-gray-400 uppercase">Total Views</h3>
-      <p class="text-3xl font-bold mt-2">
+      <p class="text-accent text-3xl font-bold mt-2">
         {(summary.totalViews / 1_000_000).toFixed(1)} M
       </p>
       <p class="text-sm text-gray-400 mt-1">cumulative views</p>

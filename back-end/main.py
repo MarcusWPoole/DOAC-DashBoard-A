@@ -165,36 +165,45 @@ def summary() -> dict:
     }
 
 @app.get("/api/episodes/guest-recurring", response_model=List[dict])
-def recurring_guest_appearance_subs_to_views():
+def recurring_guest_appearance_subs_to_views(
+    date_from: Optional[str] = Query(None, description="YYYY-MM-DD")
+):
+    # Step 1: identify recurring guests in full dataset
+    all_guests = df[df["guest"].notna()]
+    recurring_guests = all_guests["guest"].value_counts()
+    recurring_guests = recurring_guests[recurring_guests > 1].index
+
+    # Step 2: filter episodes to selected range
     data = df.copy()
+    if date_from:
+        data = data[data["release_date"] >= to_date(date_from)]
+    data = data[data["guest"].isin(recurring_guests)]
 
-    data = data[data["guest"].notna()]
-
+    # Step 3: compute ratio
     data["subs_to_views_ratio"] = (
         pd.to_numeric(data["subscribersGained"], errors="coerce") /
         pd.to_numeric(data["views"], errors="coerce")
     )
 
-    guest_counts = data["guest"].value_counts()
-    recurring_guests = guest_counts[guest_counts > 1].index
-    recurring_df = data[data["guest"].isin(recurring_guests)].copy()
-
-    recurring_df["appearance_num"] = (
-        recurring_df.groupby("guest")["episode_num"]
+    # Step 4: assign appearance numbers
+    data["appearance_num"] = (
+        data.groupby("guest")["episode_num"]
         .rank(method="first")
         .astype(int)
     )
 
-    # Return minimal data needed for boxplot
-    result = recurring_df[["guest", "appearance_num", "subs_to_views_ratio"]]
-    result = result.dropna(subset=["subs_to_views_ratio"])
-
-    return result.to_dict(orient="records")
+    result = data[["guest", "appearance_num", "subs_to_views_ratio"]]
+    return result.dropna(subset=["subs_to_views_ratio"]).to_dict(orient="records")
 
 
 @app.get("/api/episodes/correlation", response_model=List[dict])
-def correlation_kpis_to_subs():
+def correlation_kpis_to_subs(
+    date_from: Optional[str] = Query(None, description="YYYY-MM-DD")
+):
     df_clean = df[[col for col in df.columns if 'log' not in col and 'scaled' not in col]].copy()
+
+    if date_from:
+        df_clean = df_clean[df_clean["release_date"] >= to_date(date_from)]
 
     targets = ['subscribersGained', 'subscribersLost']
     kpis = df_clean.select_dtypes(include='number').drop(columns=targets, errors='ignore').columns
@@ -212,11 +221,15 @@ def correlation_kpis_to_subs():
     return records
 
 @app.get("/api/episodes/content-efficiency", response_model=List[dict])
-def content_efficiency_quadrants():
+def content_efficiency_quadrants(
+    date_from: Optional[str] = Query(None, description="YYYY-MM-DD")
+):
     data = df.copy()
+    if date_from:
+        data = data[data["release_date"] >= to_date(date_from)]
+
     data = data[["episode_num", "episode_name", "views", "averageViewDuration"]].dropna()
 
-    # Median thresholds
     views_median = data["views"].median()
     duration_median = data["averageViewDuration"].median()
 
@@ -235,3 +248,5 @@ def content_efficiency_quadrants():
         "episode_num": "episode",
         "episode_name": "title"
     }).to_dict(orient="records")
+    
+
