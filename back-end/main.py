@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, Any, List, Dict
 import pandas as pd
 import re
+from scipy.stats import pearsonr
 
 app = FastAPI()
 
@@ -162,3 +163,75 @@ def summary() -> dict:
         "topEpisode"   : top_episode,
         "topGuest"     : top_guest,
     }
+
+@app.get("/api/episodes/guest-recurring", response_model=List[dict])
+def recurring_guest_appearance_subs_to_views():
+    data = df.copy()
+
+    data = data[data["guest"].notna()]
+
+    data["subs_to_views_ratio"] = (
+        pd.to_numeric(data["subscribersGained"], errors="coerce") /
+        pd.to_numeric(data["views"], errors="coerce")
+    )
+
+    guest_counts = data["guest"].value_counts()
+    recurring_guests = guest_counts[guest_counts > 1].index
+    recurring_df = data[data["guest"].isin(recurring_guests)].copy()
+
+    recurring_df["appearance_num"] = (
+        recurring_df.groupby("guest")["episode_num"]
+        .rank(method="first")
+        .astype(int)
+    )
+
+    # Return minimal data needed for boxplot
+    result = recurring_df[["guest", "appearance_num", "subs_to_views_ratio"]]
+    result = result.dropna(subset=["subs_to_views_ratio"])
+
+    return result.to_dict(orient="records")
+
+
+@app.get("/api/episodes/correlation", response_model=List[dict])
+def correlation_kpis_to_subs():
+    df_clean = df[[col for col in df.columns if 'log' not in col and 'scaled' not in col]].copy()
+
+    targets = ['subscribersGained', 'subscribersLost']
+    kpis = df_clean.select_dtypes(include='number').drop(columns=targets, errors='ignore').columns
+
+    records = []
+    for target in targets:
+        for kpi in kpis:
+            r, p = pearsonr(df_clean[target], df_clean[kpi])
+            records.append({
+                'target': target,
+                'kpi': kpi,
+                'pearson_r': r,
+                'p_value': p
+            })
+    return records
+
+@app.get("/api/episodes/content-efficiency", response_model=List[dict])
+def content_efficiency_quadrants():
+    data = df.copy()
+    data = data[["episode_num", "episode_name", "views", "averageViewDuration"]].dropna()
+
+    # Median thresholds
+    views_median = data["views"].median()
+    duration_median = data["averageViewDuration"].median()
+
+    def bucket(row):
+        if row["views"] < views_median and row["averageViewDuration"] > duration_median:
+            return "High Attention, Low Exposure"
+        elif row["views"] >= views_median and row["averageViewDuration"] > duration_median:
+            return "High Attention, High Exposure"
+        elif row["views"] < views_median and row["averageViewDuration"] <= duration_median:
+            return "Low Attention, Low Exposure"
+        else:
+            return "Low Attention, High Exposure"
+
+    data["content_efficiency"] = data.apply(bucket, axis=1)
+    return data.rename(columns={
+        "episode_num": "episode",
+        "episode_name": "title"
+    }).to_dict(orient="records")

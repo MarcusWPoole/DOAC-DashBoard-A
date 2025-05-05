@@ -3,6 +3,7 @@
   import Header          from './components/Header.svelte';
   import Navigation      from './components/Navigation.svelte';
   import EpisodeExplorer from './components/EpisodeExplorer.svelte';
+  import InsightfulTrends from './components/InsightfulTrends.svelte';
   import SummaryCards    from './components/SummaryCards.svelte';
 
   let activeTab  = 'episode-explorer';
@@ -52,6 +53,8 @@
         {:else}
           {#if activeTab === 'episode-explorer'}
             <EpisodeExplorer {episodes} />
+            {:else if activeTab === 'insightful-trends'}
+            <InsightfulTrends {episodes} />
           {/if}
         {/if}
       </div>
