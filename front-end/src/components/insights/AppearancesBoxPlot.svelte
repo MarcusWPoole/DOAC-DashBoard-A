@@ -4,6 +4,12 @@
   
     let chartDiv;
     export let data = [];
+  export let range = '12m'; // receive selected range from parent
+  
+    $: if (data.length > 0 && chartDiv) {
+    Plotly.purge(chartDiv);
+    renderBoxplot(data);
+  }
   
     function renderBoxplot(data) {
       const grouped = {};
@@ -33,13 +39,13 @@
       }));
   
       Plotly.newPlot(chartDiv, traces, {
-        title: 'Subs-to-Views Ratio by Appearance Number (Recurring Guests)',
+        title: 'Subs-to-Views Ratio by Number of Appearances by a Guest(Recurring Guests)',
         paper_bgcolor: 'transparent',
         plot_bgcolor: 'transparent',
         font: { color: '#CCCCCC', family: 'Inter' },
         xaxis: {
           title: {
-            text: 'Appearance Number',
+            text: 'Number of Appearances',
             font: { color: '#CCCCCC' }
           },
           gridcolor: 'rgba(255, 255, 255, 0.05)',
@@ -60,8 +66,6 @@
         showlegend: false
       }, { responsive: true });
     }
-  
-    $: if (data.length > 0) renderBoxplot(data);
   </script>
   
   <div class="h-[500px]">
