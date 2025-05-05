@@ -124,3 +124,41 @@ def list_metrics():
         label = re.sub(r"(?<!^)(?=[A-Z])", " ", key).capitalize()
         metrics.append({"value": key, "label": label})
     return metrics
+
+
+@app.get("/api/episodes/summary", response_model=dict)
+def summary() -> dict:
+    data = df.copy()
+
+    total_episodes  = int(len(data))
+    total_views     = int(data["views"].sum())
+    # seconds → minutes to one decimal
+    avg_view_min    = round(data["averageViewDuration"].dropna().mean() / 60, 1)
+
+    # Most-watched episode
+    top_ep_row      = data.loc[data["views"].idxmax()]
+    top_episode     = {
+        "episode": int(top_ep_row["episode_num"]),
+        "title"  : str(top_ep_row["episode_name"]),
+        "views"  : int(top_ep_row["views"])
+    }
+
+    # Guest whose episodes have the highest cumulative views
+    guest_views     = (
+        data.dropna(subset=["guest"])
+            .groupby("guest")["views"]
+            .sum()
+    )
+    if guest_views.empty:
+        top_guest = {"name": None}
+    else:
+        guest_name  = guest_views.idxmax()
+        top_guest   = {"name": guest_name, "views": int(guest_views.max())}
+
+    return {
+        "totalEpisodes": total_episodes,
+        "totalViews"   : total_views,
+        "avgViewMin"   : avg_view_min,
+        "topEpisode"   : top_episode,
+        "topGuest"     : top_guest,
+    }

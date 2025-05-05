@@ -1,28 +1,44 @@
 <script>
   import { onMount } from 'svelte';
-  import Header from './components/Header.svelte';
-  import Navigation from './components/Navigation.svelte';
+  import Header          from './components/Header.svelte';
+  import Navigation      from './components/Navigation.svelte';
   import EpisodeExplorer from './components/EpisodeExplorer.svelte';
+  import SummaryCards    from './components/SummaryCards.svelte';
 
-  let activeTab = 'episode-explorer';
-  let isLoading = true;
+  let activeTab  = 'episode-explorer';
+  let isLoading  = true;
+  let summary    = null;     // will hold the summary-cards data
+  let episodes   = [];       // still used by EpisodeExplorer
 
-  function setActiveTab(tab) {
-    activeTab = tab;
-  }
+  onMount(async () => {
+    try {
+      const [summaryRes, episodesRes] = await Promise.all([
+        fetch('http://localhost:8001/api/episodes/summary'),
+        fetch('http://localhost:8001/api/episodes')
+      ]);
 
-  onMount(() => {
-    // Simulate data loading
-    setTimeout(() => {
+      if (!summaryRes.ok || !episodesRes.ok) throw new Error('API error');
+
+      summary  = await summaryRes.json();
+      episodes = (await episodesRes.json()).episodes;
+    } catch (err) {
+      console.error(err);
+    } finally {
       isLoading = false;
-    }, 1000);
+    }
   });
+
+  const setActiveTab = tab => (activeTab = tab);
 </script>
 
 <main class="min-h-screen pb-12">
   <Header />
 
   <div class="container mx-auto px-4 mt-8">
+    {#if summary}
+      <SummaryCards {summary} />
+    {/if}
+
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
       <div class="lg:col-span-3">
         <Navigation {activeTab} {setActiveTab} />
@@ -35,18 +51,13 @@
           </div>
         {:else}
           {#if activeTab === 'episode-explorer'}
-            <EpisodeExplorer />
-          {:else if activeTab === 'insightful-trends'}
-            <!-- TODO: Insights-->
-          {:else if activeTab === 'guest-recommendations'}
-            <!--TODO: Guest Recommender-->
+            <EpisodeExplorer {episodes} />
           {/if}
         {/if}
       </div>
     </div>
   </div>
 </main>
-
 <style>
   main {
     background-color: #121212;
