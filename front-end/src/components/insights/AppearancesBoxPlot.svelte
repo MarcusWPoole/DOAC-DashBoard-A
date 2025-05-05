@@ -9,20 +9,26 @@
       const grouped = {};
   
       for (const d of data) {
-        const key = d.appearance_num;
+        const key = parseInt(d.appearance_num);
         if (!grouped[key]) grouped[key] = [];
         grouped[key].push(d.subs_to_views_ratio);
       }
   
-      const traces = Object.entries(grouped).map(([appearance, ratios]) => ({
-        y: ratios,
+      const sortedKeys = Object.keys(grouped).map(Number).sort((a, b) => a - b);
+  
+      const traces = sortedKeys.map(appearance => ({
+        y: grouped[appearance],
         type: 'box',
-        name: `#${appearance}`,
+        name: `${appearance}`,
         boxpoints: 'all',
-        jitter: 0.4,
-        pointpos: -1.8,
-        marker: { color: 'rgba(0,0,0,0.5)', size: 5 },
-        fillcolor: 'rgba(124, 252, 0, 0.2)',
+        jitter: 0.3,
+        pointpos: 0,
+        marker: {
+          color: '#CCCCCC',
+          size: 6,
+          line: { width: 0.5, color: '#444' }
+        },
+        fillcolor: 'rgba(34, 197, 94, 0.15)',
         line: { color: '#4ADE80' }
       }));
   
@@ -32,14 +38,25 @@
         plot_bgcolor: 'transparent',
         font: { color: '#CCCCCC', family: 'Inter' },
         xaxis: {
-          title: 'Appearance Number',
-          gridcolor: 'rgba(255, 255, 255, 0.05)'
+          title: {
+            text: 'Appearance Number',
+            font: { color: '#CCCCCC' }
+          },
+          gridcolor: 'rgba(255, 255, 255, 0.05)',
+          color: '#CCCCCC',
+          tickmode: 'linear',
+          tick0: 1,
+          dtick: 1
         },
         yaxis: {
-          title: 'Subscribers-to-Views Ratio',
-          gridcolor: 'rgba(255, 255, 255, 0.05)'
+          title: {
+            text: 'Subscribers-to-Views Ratio',
+            font: { color: '#CCCCCC' }
+          },
+          gridcolor: 'rgba(255, 255, 255, 0.05)',
+          color: '#CCCCCC'
         },
-        margin: { t: 50, r: 30, b: 50, l: 60 },
+        margin: { t: 60, r: 40, b: 80, l: 90 },
         showlegend: false
       }, { responsive: true });
     }
@@ -47,7 +64,7 @@
     $: if (data.length > 0) renderBoxplot(data);
   </script>
   
-  <div class="h-96">
+  <div class="h-[500px]">
     <div bind:this={chartDiv} class="w-full h-full"></div>
   </div>
   

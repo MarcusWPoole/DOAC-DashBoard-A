@@ -26,10 +26,10 @@
           type: 'scatter',
           name: category,
           marker: {
-            size: 10,
+            size: 14,
             color: colors[i % colors.length],
-            opacity: 0.8,
-            line: { width: 0.5, color: '#000' }
+            opacity: 0.85,
+            line: { width: 1, color: '#000' }
           },
           hoverinfo: 'text'
         };
@@ -82,7 +82,7 @@
         paper_bgcolor: 'transparent',
         plot_bgcolor: 'transparent',
         font: { color: '#CCCCCC', family: 'Inter' },
-        margin: { t: 50, r: 20, b: 50, l: 60 },
+        margin: { t: 70, r: 50, b: 70, l: 90 },
         legend: {
           x: 1,
           y: 1,
@@ -100,7 +100,7 @@
     }
   </script>
   
-  <div class="h-96">
+  <div class="h-[800px]">
     <div bind:this={chartDiv} class="w-full h-full"></div>
   </div>
   
