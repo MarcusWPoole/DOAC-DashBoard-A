@@ -103,7 +103,7 @@
     $: if (data.length > 0) renderChart();
   </script>
   
-  <div class="h-64">
+  <div class="h-[30rem]">
     <canvas bind:this={canvas}></canvas>
   </div>
   

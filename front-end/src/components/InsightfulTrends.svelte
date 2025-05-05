@@ -11,6 +11,7 @@
     let correlationData = [];
     let contentEfficiencyData = [];
 
+
     let activeRange = '12m'; // default
   
     async function fetchSeasonality(range) {
@@ -79,7 +80,6 @@ async function fetchCorrelationData(range) {
   const res = await fetch(url);
   correlationData = await res.json();
 }
-
   
 onMount(() => {
   fetchSeasonality(activeRange);
@@ -117,10 +117,10 @@ onMount(() => {
         class="btn btn-primary text-sm"
         on:click={() => {
             activeRange = '6m';
-            fetchSeasonality('6m');
-            fetchContentEfficiency('6m');
-            fetchGuestBoxplotData('6m');
-            fetchCorrelationData('6m');
+            fetchSeasonality(activeRange);
+            fetchContentEfficiency(activeRange);
+            fetchGuestBoxplotData(activeRange);
+            fetchCorrelationData(activeRange);
           }}>
             Last 6 Months
           </button>
@@ -129,10 +129,10 @@ onMount(() => {
           class="btn btn-primary text-sm"
           on:click={() => {
             activeRange = '12m';
-            fetchSeasonality('12m');
-            fetchContentEfficiency('12m');
-            fetchGuestBoxplotData('12m');
-            fetchCorrelationData('12m');
+            fetchSeasonality(activeRange);
+            fetchContentEfficiency(activeRange);
+            fetchGuestBoxplotData(activeRange);
+            fetchCorrelationData(activeRange);
           }}>
             Last 12 Months
           </button>
@@ -141,10 +141,10 @@ onMount(() => {
           class="btn btn-primary text-sm"
           on:click={() => {
             activeRange = 'all';
-            fetchSeasonality('all');
-            fetchContentEfficiency('all');
-            fetchGuestBoxplotData('all');
-            fetchCorrelationData('all');
+            fetchSeasonality(activeRange);
+            fetchContentEfficiency(activeRange);
+            fetchGuestBoxplotData(activeRange);
+            fetchCorrelationData(activeRange);
           }}>
             All Time
           </button>
@@ -191,10 +191,12 @@ onMount(() => {
       </div>
       
       <div class="card">
+        <div class="card mt-6">
         <h3 class="text-lg font-semibold mb-4">Returning Guests Analysis</h3>
         <p class="text-sm text-gray-400 mb-4">Correlation between number of appearances for a guest and views to subscribers ratio</p>
         <GuestBoxplot data={guestBoxplotData} range={activeRange} />
       </div>
+    </div>
     </div>
 
     <div class="card mt-6">
