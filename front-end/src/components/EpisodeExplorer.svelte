@@ -32,6 +32,11 @@
     // Current slider values
     let rangeMin = 0;
     let rangeMax = 0;
+
+      // Filter states
+  let viewsRange = { min: 0, max: 10000000 };
+  let metric = 'views';
+  
   
     // Sort state
     let sortField     = 'date';
@@ -67,36 +72,41 @@
       }
     });
   
-    // When filters change, re-fetch
-    async function applyFilters({ dateRange: dr, viewsRange, metric }) {
-      dateRange      = dr;
-      selectedMetric = metric;
-      rangeMin       = viewsRange.min;
-      rangeMax       = viewsRange.max;
-  
-      const url = new URL('http://127.0.0.1:8001/api/episodes');
-      if (dateRange.start)   url.searchParams.set('date_from', fmt(dateRange.start));
-      if (dateRange.end)     url.searchParams.set('date_to',   fmt(dateRange.end));
-      url.searchParams.set('metric',     selectedMetric);
-      url.searchParams.set('min_metric', rangeMin);
-      url.searchParams.set('max_metric', rangeMax);
-  
-      loading = true;
-      try {
-        const res  = await fetch(url.toString(), { mode: 'cors' });
-        if (!res.ok) throw new Error(res.statusText);
-        const json = await res.json();
-        filteredData = json.episodes;
-        // update bounds (in case after date/guest filtering they shift)
-        metricMin = json.metricMin;
-        metricMax = json.metricMax;
-        updateChartData();
-      } catch (e) {
-        error = e.message;
-      } finally {
-        loading = false;
-      }
-    }
+    async function applyFilters(filters) {
+  dateRange = filters.dateRange;
+  selectedMetric = filters.metric;
+
+  const url = new URL("http://127.0.0.1:8001/api/episodes");
+  url.searchParams.set("metric", selectedMetric);
+  if (filters.dateRange.start) url.searchParams.set("date_from", fmt(filters.dateRange.start));
+  if (filters.dateRange.end)   url.searchParams.set("date_to", fmt(filters.dateRange.end));
+  if (filters.viewsRange?.min != null) url.searchParams.set("min_metric", filters.viewsRange.min);
+  if (filters.viewsRange?.max != null) url.searchParams.set("max_metric", filters.viewsRange.max);
+
+  loading = true;
+  try {
+    const res = await fetch(url.toString(), { mode: 'cors' });
+    if (!res.ok) throw new Error(await res.text());
+    const json = await res.json();
+
+    episodeData  = json.episodes;
+    filteredData = json.episodes;
+    metricMin    = json.metricMin;
+    metricMax    = json.metricMax;
+    rangeMin     = metricMin;
+    rangeMax     = metricMax;
+
+    currentPage = 1;
+    sortData(sortField, sortDirection);
+    updateChartData();
+  } catch (e) {
+    error = `Failed to load filtered episodes: ${e.message}`;
+  } finally {
+    loading = false;
+  }
+}
+
+
   
     // Sorting helper
     function sortData(field, direction) {
@@ -155,13 +165,14 @@
   
     <!-- Filters (date range + metric selector + metric-range sliders) -->
     <EpisodeFilters
-      {dateRange}
-      metricMin={metricMin}
-      metricMax={metricMax}
-      {selectedMetric}
-      metricOptions={metricOptions}
-      on:filterUpdate={e => applyFilters(e.detail)}
-    />
+    {dateRange}
+    metricMin={metricMin}
+    metricMax={metricMax}
+    metric={selectedMetric}
+    metricOptions={metricOptions}
+    on:filterUpdate={e => applyFilters(e.detail)}
+  />
+  
   <div>
     <div class="grid lg:grid-cols-2 gap-6 mt-6">
       <div class="card">
@@ -179,9 +190,6 @@
     <div class="card mt-6">
       <div class="flex justify-between mb-4">
         <h3 class="text-lg font-semibold">Episode List</h3>
-        <p class="text-sm text-gray-400">
-          Showing {filteredData.length} of {episodeData.length} episodes
-        </p>
       </div>
       <EpisodeTable 
       data={filteredData} 
@@ -191,6 +199,7 @@
       {currentPage}
       {itemsPerPage}
       onPageChange={handlePageChange}
+      on:metricChange={({ detail }) => selectedMetric = detail}
     />
     </div>
 </div>

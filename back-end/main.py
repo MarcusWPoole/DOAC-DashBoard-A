@@ -1,15 +1,14 @@
-# backend/main.py
-
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Any, Optional
+from typing import Optional, Any, List, Dict
 import pandas as pd
+import re
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -18,8 +17,8 @@ app.add_middleware(
 # Load cleaned data
 df = pd.read_json("episodes_cleaned.json", convert_dates=["release_date"])
 
-# Map client‐side metric names to DataFrame columns
-METRIC_MAP = {
+# Map client-side metric names to DataFrame columns
+METRIC_MAP: Dict[str, str] = {
     "views":            "views",
     "shares":           "shares",
     "likes":            "likes",
@@ -29,24 +28,23 @@ METRIC_MAP = {
     "subsLost":         "subscribersLost"
 }
 
+# Helper to convert date strings
 def to_date(s: str) -> pd.Timestamp:
     return pd.to_datetime(s)
 
 @app.get("/api/episodes", response_model=Any)
 def read_episodes(
-    date_from:  Optional[str]  = Query(None, description="YYYY-MM-DD"),
-    date_to:    Optional[str]  = Query(None, description="YYYY-MM-DD"),
-    metric:     str            = Query("views", description="Which metric to filter on"),
-    min_metric: Optional[float]= Query(None, description="Minimum metric value"),
-    max_metric: Optional[float]= Query(None, description="Maximum metric value"),
-    guest:      Optional[str]  = Query(None, description="Filter by guest name")
+    date_from:  Optional[str]   = Query(None, description="YYYY-MM-DD"),
+    date_to:    Optional[str]   = Query(None, description="YYYY-MM-DD"),
+    metric:     str             = Query("views", description="Which metric to filter on"),
+    min_metric: Optional[float] = Query(None, description="Minimum metric value"),
+    max_metric: Optional[float] = Query(None, description="Maximum metric value"),
+    guest:      Optional[str]   = Query(None, description="Filter by guest name")
 ):
-    
     if metric not in METRIC_MAP:
         raise HTTPException(status_code=400, detail=f"Unknown metric '{metric}'")
     col = METRIC_MAP[metric]
 
- 
     data = df.copy()
     if date_from:
         data = data[data.release_date >= to_date(date_from)]
@@ -59,12 +57,10 @@ def read_episodes(
     metric_min = float(vals.min()) if not vals.empty else 0.0
     metric_max = float(vals.max()) if not vals.empty else 0.0
 
-
     if min_metric is not None:
-        data = data[data[col] >= min_metric]
+        data = data[pd.to_numeric(data[col], errors="coerce").fillna(0) >= min_metric]
     if max_metric is not None:
-        data = data[data[col] <= max_metric]
-
+        data = data[pd.to_numeric(data[col], errors="coerce").fillna(0) <= max_metric]
 
     episodes_out = []
     for _, r in data.iterrows():
@@ -89,3 +85,42 @@ def read_episodes(
         "metricMin": metric_min,
         "metricMax": metric_max
     }
+
+@app.get("/api/episodes/bounds", response_model=Any)
+def read_metric_bounds(
+    date_from:  Optional[str]   = Query(None, description="YYYY-MM-DD"),
+    date_to:    Optional[str]   = Query(None, description="YYYY-MM-DD"),
+    metric:     str             = Query("views", description="Which metric to get bounds for"),
+    guest:      Optional[str]   = Query(None, description="Filter by guest name")
+):
+    if metric not in METRIC_MAP:
+        raise HTTPException(status_code=400, detail=f"Unknown metric '{metric}'")
+    col = METRIC_MAP[metric]
+
+    data = df.copy()
+    if date_from:
+        data = data[data.release_date >= to_date(date_from)]
+    if date_to:
+        data = data[data.release_date <= to_date(date_to)]
+    if guest:
+        data = data[data.extracted_guest == guest]
+
+    vals = pd.to_numeric(data[col], errors="coerce").dropna()
+    metric_min = float(vals.min()) if not vals.empty else 0.0
+    metric_max = float(vals.max()) if not vals.empty else 0.0
+
+    return {
+        "metricMin": metric_min,
+        "metricMax": metric_max
+    }
+
+@app.get("/api/metrics", response_model=List[Dict[str, str]])
+def list_metrics():
+    """
+    Return available metrics with human-readable labels.
+    """
+    metrics: List[Dict[str, str]] = []
+    for key in METRIC_MAP.keys():
+        label = re.sub(r"(?<!^)(?=[A-Z])", " ", key).capitalize()
+        metrics.append({"value": key, "label": label})
+    return metrics

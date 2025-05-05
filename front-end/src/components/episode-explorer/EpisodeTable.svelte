@@ -110,7 +110,7 @@
   
     <!-- Pagination controls -->
     <div class="mt-6 flex items-center justify-between">
-      <div class="text-sm text-gray-400">
+      <div class="ml-1 text-sm text-gray-400">
         Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, data.length)} of {data.length} episodes
       </div>
       <div class="flex items-center space-x-2">

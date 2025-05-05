@@ -1,86 +1,128 @@
 <script>
+    import { onMount } from 'svelte';
     import { createEventDispatcher } from 'svelte';
+    import RangeSlider from 'svelte-range-slider-pips';
   
     const dispatch = createEventDispatcher();
   
     // Props from parent
     export let dateRange = { start: null, end: null };
-    export let selectedMetric;
-    export let metricOptions = [];      // e.g. [{value:'views',label:'Views'},…]
-    export let metricMin = 0;           // from API: true minimum for selectedMetric
-    export let metricMax = 0;           // from API: true maximum for selectedMetric
+    export let metric = ''; // incoming from parent
+  export let metricOptions = [];
+
+
+    let rangeValues = [0, 0];
+    let boundsLoading = false;
+    let error = null;
+    let start = dateRange.start;
+    let end = dateRange.end;
   
-    // Local slider state
-    let rangeMin = metricMin;
-    let rangeMax = metricMax;
+    // Track previous metric for reset logic
+    let prevMetric = null;
   
-    // Whenever the metric or its bounds change, re-set the sliders
-    $: if (selectedMetric !== undefined) {
-      rangeMin = metricMin;
-      rangeMax = metricMax;
+    // Internal copies of bounds for slider use
+    let internalMin = 0;
+    let internalMax = 0;
+
+    let lastLoadedMetric = null;
+  
+    // Fetch metric options on mount
+    onMount(() => {
+      loadMetrics();
+    });
+  
+    async function loadMetrics() {
+      try {
+        const res = await fetch('http://127.0.0.1:8001/api/metrics');
+        if (!res.ok) throw new Error(res.statusText);
+        metricOptions = await res.json();
+        await loadBounds(metric);
+      } catch (err) {
+        console.error('Failed to load metrics', err);
+      }
     }
   
-    // Helpers to format/parse dates
-    function formatDateValue(date) {
-      if (!date) return '';
-      const d = new Date(date);
-      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    async function loadBounds(m, force = false) {
+  if (!force && m === lastLoadedMetric) return;
+
+  boundsLoading = true;
+  error = null;
+  try {
+    const res = await fetch(`http://127.0.0.1:8001/api/episodes/bounds?metric=${encodeURIComponent(m)}`);
+    if (!res.ok) throw new Error(res.statusText);
+    const { metricMin: min, metricMax: max } = await res.json();
+
+    internalMin = min;
+    internalMax = max;
+
+    if (force || m !== prevMetric) {
+      rangeValues = [min, max];
+      prevMetric = m;
     }
-    function parseDateValue(val) {
-      return val ? new Date(val) : null;
-    }
+
+    lastLoadedMetric = m;
+  } catch (err) {
+    console.error('Bounds error:', err);
+    error = 'Failed to load bounds';
+  } finally {
+    boundsLoading = false;
+  }
+}
+
+function onMetricChange(e) {
+  metric = e.target.value;
+  loadBounds(metric, true);
+}
+
+
+
+    function onStartChange(val) { start = val; }
+    function onEndChange(val) { end = val; }
+    function onSliderChange(e) { rangeValues = e.detail.values; }
   
-    // Emit filterUpdate for parent to fetch new data
-    function applyFilters() {
+    function resetFilters() {
+  start = null;
+  end = null;
+  metric = metricOptions[0]?.value;
+  loadBounds(metric, true);
+}
+  
+    function applyAll() {
+      if (!rangeValues || rangeValues.length < 2) return;
+  
       dispatch('filterUpdate', {
-        date_from: dateRange.start ? formatDateValue(dateRange.start) : undefined,
-        date_to:   dateRange.end   ? formatDateValue(dateRange.end)   : undefined,
-        metric:    selectedMetric,
-        min_metric: rangeMin,
-        max_metric: rangeMax
+        dateRange: { start, end },
+        viewsRange: {
+          min: rangeValues[0],
+          max: rangeValues[1]
+        },
+        metric
       });
     }
   
-    function resetFilters() {
-      dateRange = { start: null, end: null };
-      selectedMetric = metricOptions[0]?.value;
-      rangeMin = metricMin;
-      rangeMax = metricMax;
-      applyFilters();
+    function parseDateValue(val) {
+      return val ? new Date(val) : null;
     }
   </script>
   
   <div class="card p-4 space-y-6">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <!-- Date From -->
       <div>
-        <label class="block text-sm text-gray-400 mb-1">Date From</label>
-        <input 
-          type="date"
-          bind:value={dateRange.start}
-          on:change={() => dateRange.start = parseDateValue(dateRange.start)}
-          class="w-full border rounded px-3 py-2 text-sm"
-        />
+        <label for="start-date" class="block text-sm text-gray-400 mb-1">Date From</label>
+        <input id="start-date" type="date" bind:value={start}
+          on:change={() => onStartChange(parseDateValue(start))}
+          class="bg-[#2A2A2A] rounded px-3 py-2 text-sm w-full focus:outline-none focus:ring-1 focus:ring-[#FFD700]" />
       </div>
-  
-      <!-- Date To -->
       <div>
-        <label class="block text-sm text-gray-400 mb-1">Date To</label>
-        <input 
-          type="date"
-          bind:value={dateRange.end}
-          on:change={() => dateRange.end = parseDateValue(dateRange.end)}
-          class="w-full border rounded px-3 py-2 text-sm"
-        />
+        <label for="end-date" class="block text-sm text-gray-400 mb-1">Date To</label>
+        <input id="end-date" type="date" bind:value={end}
+          on:change={() => onEndChange(parseDateValue(end))}
+          class="bg-[#2A2A2A] rounded px-3 py-2 text-sm w-full focus:outline-none focus:ring-1 focus:ring-[#FFD700]" />
       </div>
-  
-      <!-- Metric Selector -->
       <div>
         <label class="block text-sm text-gray-400 mb-1">Metric</label>
-        <select
-          bind:value={selectedMetric}
-          class="w-full border rounded px-3 py-2 text-sm"
-        >
+        <select bind:value={metric} on:change={onMetricChange}
+          class="bg-[#2A2A2A] rounded px-3 py-2 text-sm w-full focus:outline-none focus:ring-1 focus:ring-[#FFD700]">
           {#each metricOptions as opt}
             <option value={opt.value}>{opt.label}</option>
           {/each}
@@ -88,46 +130,37 @@
       </div>
     </div>
   
-    <!-- Metric Range Slider -->
     <div>
       <label class="block text-sm text-gray-400 mb-1">
-        {metricOptions.find(o => o.value === selectedMetric)?.label}:
-        {rangeMin.toLocaleString()} – {rangeMax.toLocaleString()}
+        {metricOptions.find(o => o.value === metric)?.label}:
+        {#if boundsLoading}
+          Loading bounds...
+        {:else if error}
+          <span class="text-red-500">{error}</span>
+        {:else}
+          {rangeValues[0].toLocaleString()} – {rangeValues[1].toLocaleString()}
+        {/if}
       </label>
-      <div class="flex space-x-2 items-center">
-        <input
-          type="range"
-          min={metricMin}
-          max={metricMax}
-          step={(metricMax - metricMin) / 100 || 1}
-          bind:value={rangeMin}
-          class="flex-1 h-2"
-        />
-        <input
-          type="range"
-          min={metricMin}
-          max={metricMax}
-          step={(metricMax - metricMin) / 100 || 1}
-          bind:value={rangeMax}
-          class="flex-1 h-2"
-        />
-      </div>
+      <RangeSlider
+        min={internalMin}
+        max={internalMax}
+        step={(internalMax - internalMin) / 100 || 1}
+        values={rangeValues}
+        on:change={onSliderChange}
+        disabled={boundsLoading}
+        ariaLabel={[
+          `${metricOptions.find(o => o.value === metric)?.label} minimum`,
+          `${metricOptions.find(o => o.value === metric)?.label} maximum`
+        ]}
+      />
     </div>
   
-    <!-- Actions -->
     <div class="flex justify-end space-x-2">
-      <button 
-        class="btn btn-secondary px-4 py-2 text-sm"
-        on:click={resetFilters}
-      >
+      <button class="btn btn-secondary px-4 py-2 text-sm" on:click={resetFilters}>
         Reset
       </button>
-      <button 
-        class="btn btn-primary px-4 py-2 text-sm"
-        on:click={applyFilters}
-      >
+      <button class="btn btn-primary px-4 py-2 text-sm" on:click={applyAll}>
         Apply
       </button>
     </div>
   </div>
-  
