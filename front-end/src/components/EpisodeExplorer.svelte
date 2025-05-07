@@ -152,6 +152,15 @@
     currentPage = newPage;
   }
   </script>
+
+     <EpisodeFilters
+     {dateRange}
+     metricMin={metricMin}
+     metricMax={metricMax}
+     metric={selectedMetric}
+     metricOptions={metricOptions}
+     on:filterUpdate={e => applyFilters(e.detail)}
+   />
   
   {#if loading}
     <p>Loading…</p>
@@ -162,16 +171,6 @@
       <h2 class="text-2xl font-bold">Episode Explorer</h2>
       <!-- Export button etc. -->
     </div>
-  
-    <!-- Filters (date range + metric selector + metric-range sliders) -->
-    <EpisodeFilters
-    {dateRange}
-    metricMin={metricMin}
-    metricMax={metricMax}
-    metric={selectedMetric}
-    metricOptions={metricOptions}
-    on:filterUpdate={e => applyFilters(e.detail)}
-  />
   
   <div>
     <div class="grid lg:grid-cols-2 gap-6 mt-6">
