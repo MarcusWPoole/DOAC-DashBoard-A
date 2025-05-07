@@ -1,50 +1,60 @@
 <script>
     import { onMount } from 'svelte';
-    
+  
     let formData = {
       episode_name: '',
       episode_description: '',
       guest: '',
-      year: new Date().getFullYear(),
-      month: new Date().getMonth() + 1,
-      day_of_week: 1,
-      days_since_first: 0
+      release_date: new Date().toISOString().slice(0, 10)
     };
   
     let prediction = null;
     let loading = false;
     let error = null;
   
-    const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
+    // Reactive rounded value for average view percentage
+    $: roundedAvg =
+      prediction && typeof prediction.averageViewPercentage === 'number'
+        ? Math.round(prediction.averageViewPercentage)
+        : 0;
   
-    const days = [
-      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
-      'Friday', 'Saturday', 'Sunday'
-    ];
+    // Checks for any empty required field
+    $: fieldErrors = {
+      episode_name:        !formData.episode_name.trim(),
+      episode_description: !formData.episode_description.trim(),
+      guest:               !formData.guest.trim(),
+      release_date:        !formData.release_date
+    };
+  
+    // Disables button if any field invalid
+    $: isIncomplete = Object.values(fieldErrors).some(v => v);
   
     async function getPrediction() {
       loading = true;
       error = null;
-      
+      prediction = null;
+  
       try {
-        // Placeholder for API call - will be implemented later
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Placeholder prediction data
-        prediction = {
-          views: 2500000,
-          subscribersLost: 150,
-          subscribersGained: 5000,
-          likes: 125000,
-          dislikes: 2500,
-          averageViewPercentage: 72
-        };
+        const resp = await fetch('http://localhost:8001/api/forecast', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            episode_name: formData.episode_name,
+            episode_description: formData.episode_description,
+            guest: formData.guest,
+            release_date: formData.release_date
+          })
+        });
+  
+        if (!resp.ok) {
+          const errBody = await resp.json().catch(() => ({}));
+          throw new Error(errBody.detail || resp.statusText);
+        }
+  
+        prediction = await resp.json();
       } catch (err) {
-        error = 'Failed to get prediction';
         console.error(err);
+        error = 'Failed to get prediction: ' + err.message;
       } finally {
         loading = false;
       }
@@ -70,6 +80,7 @@
           <h3 class="text-lg font-semibold mb-4">Episode Details</h3>
           
           <div class="space-y-4">
+            <!-- Episode Name -->
             <div>
               <label class="block text-sm font-medium text-gray-400 mb-1">
                 Episode Name
@@ -77,22 +88,32 @@
               <input
                 type="text"
                 bind:value={formData.episode_name}
-                class="w-full bg-[#2A2A2A] rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#FFD700]"
+                class="w-full bg-[#2A2A2A] rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#FFD700]
+                       border {fieldErrors.episode_name ? 'border-red-500' : 'border-transparent'}"
                 placeholder="Enter episode name"
               />
+              {#if fieldErrors.episode_name}
+                <p class="text-red-500 text-xs mt-1">Episode name is required.</p>
+              {/if}
             </div>
   
+            <!-- Description -->
             <div>
               <label class="block text-sm font-medium text-gray-400 mb-1">
                 Description
               </label>
               <textarea
                 bind:value={formData.episode_description}
-                class="w-full bg-[#2A2A2A] rounded px-3 py-2 text-sm h-24 focus:outline-none focus:ring-1 focus:ring-[#FFD700]"
+                class="w-full bg-[#2A2A2A] rounded px-3 py-2 text-sm h-24 focus:outline-none focus:ring-1 focus:ring-[#FFD700]
+                       border {fieldErrors.episode_description ? 'border-red-500' : 'border-transparent'}"
                 placeholder="Enter episode description"
               ></textarea>
+              {#if fieldErrors.episode_description}
+                <p class="text-red-500 text-xs mt-1">Description is required.</p>
+              {/if}
             </div>
   
+            <!-- Guest -->
             <div>
               <label class="block text-sm font-medium text-gray-400 mb-1">
                 Guest
@@ -100,66 +121,29 @@
               <input
                 type="text"
                 bind:value={formData.guest}
-                class="w-full bg-[#2A2A2A] rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#FFD700]"
+                class="w-full bg-[#2A2A2A] rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#FFD700]
+                       border {fieldErrors.guest ? 'border-red-500' : 'border-transparent'}"
                 placeholder="Enter guest name"
               />
+              {#if fieldErrors.guest}
+                <p class="text-red-500 text-xs mt-1">Guest name is required.</p>
+              {/if}
             </div>
   
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-400 mb-1">
-                  Year
-                </label>
-                <input
-                  type="number"
-                  bind:value={formData.year}
-                  min="2020"
-                  max="2030"
-                  class="w-full bg-[#2A2A2A] rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#FFD700]"
-                />
-              </div>
-  
-              <div>
-                <label class="block text-sm font-medium text-gray-400 mb-1">
-                  Month
-                </label>
-                <select
-                  bind:value={formData.month}
-                  class="w-full bg-[#2A2A2A] rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#FFD700]"
-                >
-                  {#each months as month, i}
-                    <option value={i + 1}>{month}</option>
-                  {/each}
-                </select>
-              </div>
-            </div>
-  
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-400 mb-1">
-                  Day of Week
-                </label>
-                <select
-                  bind:value={formData.day_of_week}
-                  class="w-full bg-[#2A2A2A] rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#FFD700]"
-                >
-                  {#each days as day, i}
-                    <option value={i + 1}>{day}</option>
-                  {/each}
-                </select>
-              </div>
-  
-              <div>
-                <label class="block text-sm font-medium text-gray-400 mb-1">
-                  Days Since First Episode
-                </label>
-                <input
-                  type="number"
-                  bind:value={formData.days_since_first}
-                  min="0"
-                  class="w-full bg-[#2A2A2A] rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#FFD700]"
-                />
-              </div>
+            <!-- Release Date -->
+            <div>
+              <label class="block text-sm font-medium text-gray-400 mb-1">
+                Release Date
+              </label>
+              <input
+                type="date"
+                bind:value={formData.release_date}
+                class="w-full bg-[#2A2A2A] rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#FFD700]
+                       border {fieldErrors.release_date ? 'border-red-500' : 'border-transparent'}"
+              />
+              {#if fieldErrors.release_date}
+                <p class="text-red-500 text-xs mt-1">Release date is required.</p>
+              {/if}
             </div>
           </div>
   
@@ -167,10 +151,9 @@
             <button
               class="btn btn-accent w-full"
               on:click={getPrediction}
-              disabled={loading}
+              disabled={loading || isIncomplete}
             >
               {#if loading}
-                <span class="inline-block animate-spin mr-2">🔄</span>
                 Generating Prediction...
               {:else}
                 Generate Prediction
@@ -228,12 +211,12 @@
                 </div>
               </div>
   
-              <!-- Engagement -->
+              <!-- Engagement Metrics -->
               <div class="bg-[#2A2A2A] rounded-lg p-4">
                 <h4 class="text-sm font-semibold mb-3">Engagement Metrics</h4>
                 
+                <!-- Like Ratio -->
                 <div class="space-y-4">
-                  <!-- Likes/Dislikes -->
                   <div>
                     <div class="flex justify-between text-sm mb-1">
                       <span class="text-gray-400">Like Ratio</span>
@@ -253,24 +236,24 @@
                     </div>
                     <div class="flex justify-between mt-2 text-sm">
                       <div class="text-green-500">
-                        👍 {formatNumber(prediction.likes)}
+                        {formatNumber(prediction.likes)}
                       </div>
                       <div class="text-red-500">
-                        👎 {formatNumber(prediction.dislikes)}
+                        {formatNumber(prediction.dislikes)}
                       </div>
                     </div>
                   </div>
   
-                  <!-- Average View Duration -->
+                  <!-- Average View Percentage -->
                   <div>
                     <div class="flex justify-between text-sm mb-1">
-                      <span class="text-gray-400">Average View Duration</span>
-                      <span class="font-semibold">{prediction.averageViewPercentage}%</span>
+                      <span class="text-gray-400">Average View Percentage</span>
+                      <span class="font-semibold">{roundedAvg}%</span>
                     </div>
                     <div class="h-2 bg-[#1A1A1A] rounded-full overflow-hidden">
                       <div 
                         class="h-full bg-blue-500"
-                        style="width: {prediction.averageViewPercentage}%"
+                        style="width: {roundedAvg}%"
                       ></div>
                     </div>
                   </div>
@@ -282,3 +265,10 @@
       </div>
     </div>
   </div>
+  
+  <style>
+    /* Ensure the dynamic border classes work */
+    .border-transparent { border-width: 1px; }
+    .border-red-500  { border-width: 1px; }
+  </style>
+  
