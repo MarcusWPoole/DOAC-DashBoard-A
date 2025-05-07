@@ -5,11 +5,13 @@
     import IconHisto from "./IconHisto.svelte";
     import IconHonor from "./IconHonor.svelte";
     import IconTableCont from "./IconTableCont.svelte";
+    import IconEye from "./IconEye.svelte";
     
     const tabs = [
       { id: 'episode-explorer', label: 'Episode Explorer', icon: IconTableCont },
       { id: 'insightful-trends', label: 'Insightful Trends', icon: IconHisto },
-      { id: 'guest-recommendations', label: 'Guest Recommendations', icon: IconHonor }
+      { id: 'guest-recommendations', label: 'Guest Recommendations', icon: IconHonor },
+      { id: 'episode-forecasting', label: 'Episode Forecasting', icon: IconEye }
     ];
   </script>
   

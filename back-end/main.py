@@ -1,14 +1,44 @@
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional, Any, List, Dict
+from pydantic import BaseModel
+from typing import Optional, Any, Dict, List
 import pandas as pd
 import re
-from scipy.stats import pearsonr
+import joblib
+import sys
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 
-app = FastAPI()
+# Utility function for text combination (must be at module level for unpickling)
+def combine_episode_text(df: pd.DataFrame) -> pd.Series:
+    title = df['episode_name'].fillna('')
+    desc  = df['episode_description'].fillna('')
+    return title + ' ' + desc
 
+# Ensure the unpickler can find combine_episode_text in the main module
+for mod_name in ('__main__', '__mp_main__'):
+    main_mod = sys.modules.get(mod_name)
+    if main_mod is not None:
+        setattr(main_mod, 'combine_episode_text', combine_episode_text)
+
+# Load predictive pipeline at module level so it's available in all endpoints
+try:
+    model = joblib.load('./video_performance_model.pkl')
+except Exception as e:
+    raise RuntimeError(f"Failed to load predictive model: {e}")
+
+# Function to build feature DataFrame for forecasting
+def prepare_forecast_df(payload: Dict[str, Any], min_date: pd.Timestamp) -> pd.DataFrame:
+    date = pd.to_datetime(payload['release_date'])
+    df_in = pd.DataFrame([{**payload}])
+    df_in['year'] = date.year
+    df_in['month'] = date.month
+    df_in['day_of_week'] = date.weekday()
+    df_in['days_since_first'] = (date - min_date).days
+    return df_in
+
+# Initialize FastAPI app
+app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,14 +47,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load cleaned data
+# Load cleaned data for other endpoints
 df = pd.read_json("episodes_cleaned.json", convert_dates=["release_date"])
+_min_date = df['release_date'].min()
 
+# Clean and topic modeling prep (unchanged)...
 if 'clean_text_for_topic' not in df.columns:
     df['text_for_topic_raw'] = (
         df['episode_name'].fillna('') + ' ' + df['episode_description'].fillna('')
     )
-
     def clean_text(text: str) -> str:
         lines = text.split('\n')
         filtered = []
@@ -32,9 +63,7 @@ if 'clean_text_for_topic' not in df.columns:
             if re.match(r'^\s*\d{1,2}:\d{2}', line):
                 continue
             low = line.strip().lower()
-            if (low.startswith('topics:') or low.startswith('sponsors:') or
-                low.startswith('follow') or low.startswith('this episode') or
-                low.startswith('join this channel') or low.startswith('my new book')):
+            if low.startswith(('topics:', 'sponsors:', 'follow', 'this episode', 'join this channel', 'my new book')):
                 continue
             filtered.append(line)
         cleaned = ' '.join(filtered)
@@ -43,25 +72,15 @@ if 'clean_text_for_topic' not in df.columns:
         cleaned = re.sub(r'[^A-Za-z\s]', ' ', cleaned)
         cleaned = re.sub(r'\s+', ' ', cleaned).strip()
         return cleaned.lower()
-
     df['clean_text_for_topic'] = df['text_for_topic_raw'].apply(clean_text)
-
-# Run LDA at startup
-vectorizer = CountVectorizer(
-    max_df=0.85, min_df=3,
-    stop_words='english', max_features=1500,
-    ngram_range=(1,2)
-)
+vectorizer = CountVectorizer(max_df=0.85, min_df=3, stop_words='english', max_features=1500, ngram_range=(1,2))
 dtm = vectorizer.fit_transform(df['clean_text_for_topic'])
-lda = LatentDirichletAllocation(
-    n_components=8, max_iter=15,
-    learning_method='online', random_state=42
-)
+lda = LatentDirichletAllocation(n_components=8, max_iter=15, learning_method='online', random_state=42)
 W = lda.fit_transform(dtm)
 df['lda_topic_id']   = W.argmax(axis=1)
 df['lda_topic_prob'] = W.max(axis=1)
 
-# Map client-side metric names to DataFrame columns
+# Metric map
 METRIC_MAP: Dict[str, str] = {
     "views":            "views",
     "shares":           "shares",
@@ -72,7 +91,6 @@ METRIC_MAP: Dict[str, str] = {
     "subsLost":         "subscribersLost"
 }
 
-# Helper to convert date strings
 def to_date(s: str) -> pd.Timestamp:
     return pd.to_datetime(s)
 
@@ -322,3 +340,39 @@ def topic_performance(date_from: Optional[str] = Query(None, description="YYYY-M
             .reset_index()
     )
     return grouped.to_dict(orient='records')
+
+# Include subscribersLost as part of the output targets and response model
+targets = ['views','subscribersLost','subscribersGained','likes','dislikes','averageViewPercentage']
+class ForecastRequest(BaseModel):
+    episode_name: str
+    episode_description: str
+    guest: str
+    release_date: str
+
+class ForecastResponse(BaseModel):
+    views: float
+    subscribersLost: float
+    subscribersGained: float
+    likes: float
+    dislikes: float
+    averageViewPercentage: float
+
+# Prepare features
+def prepare_forecast_df(payload:Dict[str,Any],min_date:pd.Timestamp)->pd.DataFrame:
+    date=pd.to_datetime(payload['release_date'])
+    df_in=pd.DataFrame([payload])
+    df_in['year'],df_in['month']=date.year,date.month
+    df_in['day_of_week']=date.weekday()
+    df_in['days_since_first']=(date-min_date).days
+    return df_in
+
+# Forecast endpoint
+@app.post('/api/forecast',response_model=ForecastResponse)
+def forecast(request:ForecastRequest):
+    payload=request.dict()
+    df_feat=prepare_forecast_df(payload,_min_date)
+    preds=model.predict(df_feat)
+    if preds.shape[1]!=len(targets):
+        raise HTTPException(status_code=500,detail=f"Model outputs {preds.shape[1]} dims, expected {len(targets)}.")
+    out=dict(zip(targets,preds.flatten().tolist()))
+    return ForecastResponse(**out)

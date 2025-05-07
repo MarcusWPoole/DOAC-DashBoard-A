@@ -4,3 +4,5 @@ pandas
 python-dateutil
 scipy
 scikit-learn
+numpy
+joblib
