@@ -24,36 +24,6 @@
       </div>
     </div>
     
-    <div class="card mb-6">
-      <h3 class="text-lg font-semibold mb-2">How Our Recommendations Work</h3>
-      <p class="text-sm text-gray-300">
-        Our AI-powered recommendation engine analyzes multiple data sources to identify potential high-impact guests for your podcast:
-      </p>
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-        <div class="bg-[#2A2A2A] p-4 rounded-md">
-          <h4 class="text-sm font-semibold gold-accent mb-2">Trend Analysis</h4>
-          <p class="text-xs text-gray-300">
-            We analyze Google Trends data for the past 90 days to identify individuals gaining popularity in relevant topics.
-          </p>
-        </div>
-        
-        <div class="bg-[#2A2A2A] p-4 rounded-md">
-          <h4 class="text-sm font-semibold gold-accent mb-2">Historical Engagement</h4>
-          <p class="text-xs text-gray-300">
-            We evaluate similar guest profiles from your past episodes to predict potential audience engagement.
-          </p>
-        </div>
-        
-        <div class="bg-[#2A2A2A] p-4 rounded-md">
-          <h4 class="text-sm font-semibold gold-accent mb-2">Audience Alignment</h4>
-          <p class="text-xs text-gray-300">
-            We match potential guests with your audience demographics and interests to ensure relevance.
-          </p>
-        </div>
-      </div>
-    </div>
-    
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <div class="lg:col-span-7">
         <div class="card">
