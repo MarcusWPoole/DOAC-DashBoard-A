@@ -1,11 +1,34 @@
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional, Any, List, Dict
+from pydantic import BaseModel
+from typing import Optional, Any, Dict, List
 import pandas as pd
 import re
-from scipy.stats import pearsonr
+import joblib
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
+
+def combine_episode_text(df: pd.DataFrame) -> pd.Series:
+    title = df['episode_name'].fillna('')
+    desc  = df['episode_description'].fillna('')
+    return title + ' ' + desc
+
+    # Load predictive pipeline (ensure the pickle matches this module's scope)
+    model = joblib.load('./video_performance_model.pkl')
+
+def prepare_forecast_df(payload: Dict[str, Any], min_date: pd.Timestamp) -> pd.DataFrame:
+    """
+    Build a DataFrame with model features from input payload.
+    """
+    # Parse release_date
+    date = pd.to_datetime(payload['release_date'])
+    df_in = pd.DataFrame([{**payload}])
+    df_in['year'] = date.year
+    df_in['month'] = date.month
+    df_in['day_of_week'] = date.weekday()
+    df_in['days_since_first'] = (date - min_date).days
+    return df_in
+
 
 app = FastAPI()
 
@@ -19,6 +42,10 @@ app.add_middleware(
 
 # Load cleaned data
 df = pd.read_json("episodes_cleaned.json", convert_dates=["release_date"])
+
+# Precomputes smallest date for days_since_first
+_min_date = df['release_date'].min()
+
 
 if 'clean_text_for_topic' not in df.columns:
     df['text_for_topic_raw'] = (
@@ -75,6 +102,7 @@ METRIC_MAP: Dict[str, str] = {
 # Helper to convert date strings
 def to_date(s: str) -> pd.Timestamp:
     return pd.to_datetime(s)
+
 
 @app.get("/api/episodes", response_model=Any)
 def read_episodes(
@@ -322,3 +350,38 @@ def topic_performance(date_from: Optional[str] = Query(None, description="YYYY-M
             .reset_index()
     )
     return grouped.to_dict(orient='records')
+
+# --- Forecast endpoint ---
+class ForecastRequest(BaseModel):
+    episode_name: str
+    episode_description: str
+    guest: str
+    release_date: str  # YYYY-MM-DD
+
+class ForecastResponse(BaseModel):
+    views: float
+    estimatedMinutesWatched: float
+    subscribersGained: float
+    likes: float
+    dislikes: float
+    averageViewPercentage: float
+
+@app.post("/api/forecast", response_model=ForecastResponse)
+def forecast(request: ForecastRequest):
+    """
+    Predict KPIs for a new episode.
+    """
+    # Prepare input DataFrame
+    payload = request.dict()
+    df_feat = prepare_forecast_df(payload, _min_date)
+
+    # Ensure text combination matches pipeline
+    df_feat['episode_name'] = df_feat['episode_name']
+    df_feat['episode_description'] = df_feat['episode_description']
+    df_feat['guest'] = df_feat['guest']
+
+    preds = model.predict(df_feat)
+    # Map target order to keys
+    keys = ['views', 'estimatedMinutesWatched', 'subscribersGained', 'likes', 'dislikes', 'averageViewPercentage']
+    values = preds.flatten().tolist()
+    return ForecastResponse(**dict(zip(keys, values)))

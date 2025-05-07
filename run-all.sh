@@ -8,4 +8,4 @@
 sleep 2
 
 # Launch frontend
-(cd front-end && npm run dev)
+(cd front-end && npm install && npm run dev)
