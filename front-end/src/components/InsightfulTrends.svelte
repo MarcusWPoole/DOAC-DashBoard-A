@@ -4,12 +4,14 @@
     import GuestBoxplot from './insights/AppearancesBoxPlot.svelte';
     import SubGainBarChart from './insights/SubGainBarChart.svelte';
     import ContentEfficiencyScatter from './insights/ContentEfficiencyScatter.svelte';
+    import TopicPerformance from './insights/TopicPerformance.svelte'
 
   
     let seasonalityData = [];
     let guestBoxplotData = [];
     let correlationData = [];
     let contentEfficiencyData = [];
+    let topicData = [];
 
 
     let activeRange = 'all'; // default
@@ -80,12 +82,25 @@ async function fetchCorrelationData(range) {
   const res = await fetch(url);
   correlationData = await res.json();
 }
+
+async function fetchTopicData(range) {
+   const url = new URL('http://localhost:8001/api/topics/performance');
+   if (range !== 'all') {
+     const months = range === '6m' ? 6 : 12;
+     const fromDate = new Date();
+     fromDate.setMonth(fromDate.getMonth() - months);
+     url.searchParams.append('date_from', fromDate.toISOString().split('T')[0]);
+   }
+   const res = await fetch(url);
+   topicData = await res.json();
+}
   
 onMount(() => {
   fetchSeasonality(activeRange);
   fetchContentEfficiency(activeRange);
   fetchGuestBoxplotData(activeRange);
   fetchCorrelationData(activeRange);
+  fetchTopicData(activeRange);
 });
 
 $: btnClasses = (range) =>
@@ -100,6 +115,7 @@ const setRange = (range) => {
     fetchContentEfficiency(range);
     fetchGuestBoxplotData(range);
     fetchCorrelationData(range);
+    fetchTopicData(range);
 };
 
 
@@ -194,6 +210,11 @@ const setRange = (range) => {
         <h3 class="text-lg font-semibold mb-4">Returning Guests Analysis</h3>
         <p class="text-sm text-gray-400 mb-4">Correlation between number of appearances for a guest and views to subscribers ratio</p>
         <GuestBoxplot data={guestBoxplotData} range={activeRange} />
+      </div>
+      <div class="card mt-6">
+        <h3 class="text-lg font-semibold mb-4">Topic Performance</h3>
+        <p class="text-sm text-gray-400 mb-4">Visualisation of the performance of topics on views and engagement</p>
+        <TopicPerformance topicData={topicData} range={activeRange}/>
       </div>
     </div>
     </div>

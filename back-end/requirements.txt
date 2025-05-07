@@ -2,4 +2,5 @@ fastapi
 uvicorn[standard]
 pandas
 python-dateutil
-scipy>=1.10.0
+scipy
+scikit-learn

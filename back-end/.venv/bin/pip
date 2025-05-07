@@ -1,4 +1,4 @@
-#!/root/DOAC-Dashboard/DOAC-DashBoard/back-end/.venv/bin/python3
+#!/root/DOAC-DashBoard-A/back-end/.venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys

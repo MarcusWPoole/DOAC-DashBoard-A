@@ -4,6 +4,8 @@ from typing import Optional, Any, List, Dict
 import pandas as pd
 import re
 from scipy.stats import pearsonr
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import LatentDirichletAllocation
 
 app = FastAPI()
 
@@ -17,6 +19,47 @@ app.add_middleware(
 
 # Load cleaned data
 df = pd.read_json("episodes_cleaned.json", convert_dates=["release_date"])
+
+if 'clean_text_for_topic' not in df.columns:
+    df['text_for_topic_raw'] = (
+        df['episode_name'].fillna('') + ' ' + df['episode_description'].fillna('')
+    )
+
+    def clean_text(text: str) -> str:
+        lines = text.split('\n')
+        filtered = []
+        for line in lines:
+            if re.match(r'^\s*\d{1,2}:\d{2}', line):
+                continue
+            low = line.strip().lower()
+            if (low.startswith('topics:') or low.startswith('sponsors:') or
+                low.startswith('follow') or low.startswith('this episode') or
+                low.startswith('join this channel') or low.startswith('my new book')):
+                continue
+            filtered.append(line)
+        cleaned = ' '.join(filtered)
+        cleaned = re.sub(r'http\S+|www\.\S+', ' ', cleaned)
+        cleaned = re.sub(r'\d+', ' ', cleaned)
+        cleaned = re.sub(r'[^A-Za-z\s]', ' ', cleaned)
+        cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+        return cleaned.lower()
+
+    df['clean_text_for_topic'] = df['text_for_topic_raw'].apply(clean_text)
+
+# Run LDA at startup
+vectorizer = CountVectorizer(
+    max_df=0.85, min_df=3,
+    stop_words='english', max_features=1500,
+    ngram_range=(1,2)
+)
+dtm = vectorizer.fit_transform(df['clean_text_for_topic'])
+lda = LatentDirichletAllocation(
+    n_components=8, max_iter=15,
+    learning_method='online', random_state=42
+)
+W = lda.fit_transform(dtm)
+df['lda_topic_id']   = W.argmax(axis=1)
+df['lda_topic_prob'] = W.max(axis=1)
 
 # Map client-side metric names to DataFrame columns
 METRIC_MAP: Dict[str, str] = {
@@ -163,6 +206,7 @@ def summary() -> dict:
         "topEpisode"   : top_episode,
         "topGuest"     : top_guest,
     }
+    
 
 @app.get("/api/episodes/guest-recurring", response_model=List[dict])
 def recurring_guest_appearance_subs_to_views(
@@ -250,3 +294,31 @@ def content_efficiency_quadrants(
     }).to_dict(orient="records")
     
 
+@app.get("/api/topics/performance", response_model=List[Dict[str, Any]])
+def topic_performance(date_from: Optional[str] = Query(None, description="YYYY-MM-DD")):
+    topic_labels = {
+        0: "Health & Wellness",
+        1: "Business and Entrepreneurship",
+        2: "Technology",
+        3: "Social Issues",
+        4: "Leadership",
+        5: "Personal Growth",
+        6: "Relationships",
+        7: "Life Style"
+    }
+    data = df.copy()
+    if date_from:
+        data = data[data["release_date"] >= to_date(date_from)]
+
+    # Map IDs to labels
+    data['topic'] = data['lda_topic_id'].map(topic_labels)
+    grouped = (
+        data.groupby('topic')
+            .agg(
+                avg_views=('views', 'mean'),
+                avg_engagement=('averageViewPercentage', 'mean'),
+                episode_count=('topic', 'count')
+            )
+            .reset_index()
+    )
+    return grouped.to_dict(orient='records')

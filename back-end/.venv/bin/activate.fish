@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV /root/DOAC-Dashboard/DOAC-DashBoard/back-end/.venv
+set -gx VIRTUAL_ENV /root/DOAC-DashBoard-A/back-end/.venv
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/"bin $PATH
