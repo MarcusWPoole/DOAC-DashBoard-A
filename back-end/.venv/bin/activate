@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV=/root/DOAC-Dashboard/DOAC-DashBoard/back-end/.venv
+VIRTUAL_ENV=/root/DOAC-DashBoard-A/back-end/.venv
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

@@ -3,3 +3,4 @@ uvicorn[standard]
 pandas
 python-dateutil
 scipy
+scikit-learn
