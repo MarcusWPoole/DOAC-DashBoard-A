@@ -122,20 +122,20 @@ const setRange = (range) => {
 
     const keyFindings = [
       {
-        title: 'Lorem ipsum dolor sit.',
-        description: '  Lorem, ipsum dolor sit amet consectetur adipisicing elit. Vel at ipsam ullam est nihil quia quo voluptatem! Quibusdam aut perspiciatis corporis, ex eum voluptas ullam iure aspernatur, recusandae deserunt quam.'
+        title: 'Focus on loyalty.',
+        description: 'While visibility is important, to improve net subscriber growth the focus should be on what converts into loyalty.'
       },
       {
-        title: 'Lorem ipsum dolor sit.',
-        description: '  Lorem, ipsum dolor sit amet consectetur adipisicing elit. Vel at ipsam ullam est nihil quia quo voluptatem! Quibusdam aut perspiciatis corporis, ex eum voluptas ullam iure aspernatur, recusandae deserunt quam.'
+        title: 'Returning Guests',
+        description: 'Guests generate the highest subscriber-to-views ratio on their first or second appearance. Impact declines sharply with each additional return, indicating diminishing returns from repeat guests.'
       },
       {
-        title: 'Lorem ipsum dolor sit.',
-        description: '  Lorem, ipsum dolor sit amet consectetur adipisicing elit. Vel at ipsam ullam est nihil quia quo voluptatem! Quibusdam aut perspiciatis corporis, ex eum voluptas ullam iure aspernatur, recusandae deserunt quam.'
+        title: 'Changing Seasons.',
+        description: 'Strong seasonal spikes in both views and new subscribers occur consistently around Q1 and Q3 each year. Engagement peaks in early spring and late summer, indicating optimal windows for high-impact content drops. As well as increased promotion efforts during those dips'
       },
       {
-        title: 'Lorem ipsum dolor sit.',
-        description: '  Lorem, ipsum dolor sit amet consectetur adipisicing elit. Vel at ipsam ullam est nihil quia quo voluptatem! Quibusdam aut perspiciatis corporis, ex eum voluptas ullam iure aspernatur, recusandae deserunt quam.'
+        title: 'Hidden Gems',
+        description: "Episodes in the blue quadrant (High Attention, Low Exposure) are hidden gems, They deliver strong viewer engagement but haven't reached wide audiences. These should be prioritised for re-promotion or reposting to maximise ROI."
       }
     ];
   </script>
@@ -225,35 +225,5 @@ const setRange = (range) => {
         <ContentEfficiencyScatter data={contentEfficiencyData} range={activeRange} />
       </div>
     
-    <div class="card mt-6">
-      <h3 class="text-lg font-semibold mb-4">Executive Summary</h3>
-      
-      <div class="prose prose-sm text-gray-300 max-w-none">
-        <p>
-          Analysis of The Diary of a CEO podcast over the past 12 months reveals several actionable insights:
-        </p>
-        
-        <ol class="list-decimal pl-5 space-y-2 mt-3">
-          <li>
-            <strong class="text-white">Lorem ipsum dolor sit amet consectetur adipisicing elit. Facere, autem!</strong> 
-            Lorem ipsum dolor, sit amet consectetur adipisicing elit. Repudiandae maxime iste velit quaerat natus dolor alias fuga! Fugiat cumque, quod dicta, consectetur nisi nobis sequi natus quidem eum culpa cum.
-          </li>
-          
-          <li>
-            <strong class="text-white">Lorem ipsum dolor sit amet consectetur adipisicing elit. Facere, autem!</strong> 
-           Lorem ipsum dolor sit amet consectetur, adipisicing elit. Maiores, accusantium debitis porro amet, aperiam quo fugit aliquam, at neque esse excepturi minus accusamus dignissimos delectus voluptate reiciendis nesciunt sequi! Perferendis!
-          </li>
-          
-          <li>
-            <strong class="text-white">Lorem ipsum dolor sit amet.</strong> 
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Ut adipisci consequatur consequuntur dolorem necessitatibus soluta esse possimus doloremque, veritatis repellendus ratione corrupti quas autem impedit magnam, recusandae tempora beatae veniam.
-          </li>
-          
-          <li>
-            <strong class="text-white">Lorem ipsum dolor sit amet.</strong> 
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Sunt aspernatur ea porro inventore eum et, quam atque minima, necessitatibus laborum sint explicabo totam provident eos. Enim architecto quisquam ad! Deserunt?.
-          </li>
-        </ol>
-      </div>
-    </div>
+ 
   </div>
