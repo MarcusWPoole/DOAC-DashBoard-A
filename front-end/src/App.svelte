@@ -5,6 +5,7 @@
   import EpisodeExplorer from './components/EpisodeExplorer.svelte';
   import InsightfulTrends from './components/InsightfulTrends.svelte';
   import SummaryCards    from './components/SummaryCards.svelte';
+  import GuestRecommendations from './components/GuestRecommendations.svelte';
 
   let activeTab  = 'episode-explorer';
   let isLoading  = true;
@@ -55,6 +56,8 @@
             <EpisodeExplorer {episodes} />
             {:else if activeTab === 'insightful-trends'}
             <InsightfulTrends {episodes} />
+            {:else if activeTab === 'guest-recommendations'}
+            <GuestRecommendations />
           {/if}
         {/if}
       </div>
