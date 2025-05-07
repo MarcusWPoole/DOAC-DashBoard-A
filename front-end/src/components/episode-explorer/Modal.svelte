@@ -28,6 +28,53 @@
 
       // Calculate like ratio
   $: likeRatio = episode ? Math.round((episode.likes / (episode.likes + episode.dislikes)) * 100) : 0;
+
+  function handleExport() {
+  if (!episode) return;
+
+  const csvHeaders = [
+    "Episode Number",
+    "Date",
+    "Title",
+    "Guest",
+    "Views",
+    "Shares",
+    "Average View Time (min)",
+    "Subs Gained",
+    "Subs Lost",
+    "Likes",
+    "Dislikes",
+    "Like Ratio (%)",
+    "Avg View Duration (%)",
+    "Net Subscriber Growth (%)"
+  ];
+
+  const csvData = [
+    episode.episode,
+    formatDate(episode.date),
+    `"${episode.title}"`,
+    episode.guest || "",
+    episode.views,
+    episode.shares,
+    roundNum(episode.avgViewTime / 60),
+    episode.subsGained,
+    episode.subsLost,
+    episode.likes,
+    episode.dislikes,
+    likeRatio,
+    episode.avgViewDuration,
+    Math.round((1 - episode.subsLost / episode.subsGained) * 100)
+  ];
+
+  const csvContent = [csvHeaders.join(","), csvData.join(",")].join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+
+  link.setAttribute("href", URL.createObjectURL(blob));
+  link.setAttribute("download", `episode-${episode.episode}.csv`);
+  link.click();
+}
+
   </script>
 
   <svelte:window on:keydown={handleKeydown}/>
@@ -187,7 +234,7 @@
         <!-- Footer -->
         <div class="p-6 border-t border-[#2A2A2A] bg-[#2A2A2A] flex justify-end space-x-3">
           <button class="btn btn-secondary" on:click={closeModal}>Close</button>
-          <button class="btn btn-accent">Export Data</button>
+          <button class="btn btn-accent" on:click={handleExport}>Export Data</button>
         </div>
       </div>
     </div>

@@ -42,7 +42,7 @@
         title: 'Subs-to-Views Ratio by Number of Appearances by a Guest(Recurring Guests)',
         paper_bgcolor: 'transparent',
         plot_bgcolor: 'transparent',
-        font: { color: '#CCCCCC', family: 'Inter' },
+        font: { color: '#CCCCCC', family: 'roboto' },
         xaxis: {
           title: {
             text: 'Number of Appearances',

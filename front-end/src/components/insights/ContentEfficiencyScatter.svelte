@@ -16,7 +16,7 @@
       const durations = data.map(d => d.averageViewDuration);
       const labels = data.map(d => `${d.episode}: ${d.title}`);
       const categories = [...new Set(data.map(d => d.content_efficiency))];
-      const colors = ['#EF4444', '#F59E0B', '#3B82F6', '#10B981'];
+      const colors = ['#EF4444', '#3B82F6', '#F59E0B', '#10B981'];
   
       const traces = categories.map((category, i) => {
         const filtered = data.filter(d => d.content_efficiency === category);
@@ -83,7 +83,7 @@
         shapes,
         paper_bgcolor: 'transparent',
         plot_bgcolor: 'transparent',
-        font: { color: '#CCCCCC', family: 'Inter' },
+        font: { color: '#CCCCCC', family: 'roboto' },
         margin: { t: 70, r: 50, b: 70, l: 90 },
         legend: {
           x: 1,

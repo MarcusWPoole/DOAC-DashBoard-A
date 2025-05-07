@@ -4,7 +4,6 @@
   import Navigation      from './components/Navigation.svelte';
   import EpisodeExplorer from './components/EpisodeExplorer.svelte';
   import InsightfulTrends from './components/InsightfulTrends.svelte';
-  import SummaryCards    from './components/SummaryCards.svelte';
   import GuestRecommendations from './components/GuestRecommendations.svelte';
   import EpisodeForecasting from './components/EpisodeForecasting.svelte';
 
@@ -35,12 +34,9 @@
 </script>
 
 <main class="min-h-screen pb-12">
-  <Header />
+  <Header {summary} />
 
   <div class="container mx-auto px-4 mt-8">
-    {#if summary}
-      <SummaryCards {summary} />
-    {/if}
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
       <div class="lg:col-span-3">

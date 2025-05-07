@@ -4,8 +4,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        serif: ['Lora', 'serif'],
+        sans: ['roboto', 'sans-serif'],
+        serif: ['roboto', 'serif'],
       },
       colors: {
         background: '#121212',

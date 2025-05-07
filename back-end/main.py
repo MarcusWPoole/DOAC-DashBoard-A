@@ -8,6 +8,8 @@ import joblib
 import sys
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
+from scipy.stats import pearsonr
+
 
 # Utility function for text combination (must be at module level for unpickling)
 def combine_episode_text(df: pd.DataFrame) -> pd.Series:
