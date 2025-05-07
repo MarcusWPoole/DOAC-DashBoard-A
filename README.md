@@ -110,3 +110,11 @@ Stripped out timestamps (e.g. “00:15”), sponsor/promotional boilerplate, URL
 
 LDA with 8 topics to label each episode for thematic analysis, probably not accurate to number of podcast topics.
 
+
+
+
+# Future Extensions:
+
+I believe the extension that would have the greatest impact on the results a product like this could deliver is a working guest recommendation system. The main blocker I faced here was the lack of an official API for Google Trends. The unofficial alternatives available are unreliable, they tend to get flagged as bots and either rate-limited or blacklisted, making them unsuitable for production use. That said, I recall Isaac mentioning that it’s often better to get something currently not possible 80% of the way there rather than hold back entirely, so I went ahead and built the tool using dummy data to validate the concept. With a reliable trends signal in place, this feature could increase audience engagement by surfacing timely and in-demand guest suggestions. Or strealine the search process when a topic of interest is identified. To further this I would use google's custom search engine api to perform searches based on key words or topics extracted from the tool and filter it to discover guests either through web scraping or feeding the the result through an LLM. The results of this process could then be explored by the guest booking team speeding up initial discovery time.
+
+Another extension would be integrating a large language model to automatically generate the key findings on the InsightsfulTrends page. This model would ingest data directly from the displayed graphs or a structured analysis layer, and translate it into clear, concise, copy-ready insights for dashboard users. These summaries would be phrased in a way that’s professional and easy to understand, suitable for executive reporting or stakeholder sharing. Additionally, insights could update in real time whenever new, significant trends are detected, delivering useable insights the moment a user lands on the page. This process would accelerate decision-making by highlighting impactful opportunities without the need for manual interpretation, removing the need for a technical middleman.

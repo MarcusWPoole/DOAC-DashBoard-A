@@ -153,6 +153,10 @@
   }
   </script>
 
+<div class="flex justify-between mb-6">
+  <h2 class="text-2xl font-bold">Episode Explorer</h2>
+</div>
+
      <EpisodeFilters
      {dateRange}
      metricMin={metricMin}
@@ -167,25 +171,16 @@
   {:else if error}
     <p class="text-red-600">Error: {error}</p>
   {:else}
-    <div class="flex justify-between mb-6">
-      <h2 class="text-2xl font-bold">Episode Explorer</h2>
-      <!-- Export button etc. -->
-    </div>
-  
+
   <div>
-    <div class="grid lg:grid-cols-2 gap-6 mt-6">
+    <div class="grid lg:grid-cols- gap-6 mt-6">
       <div class="card">
         <h3 class="mb-4 text-lg font-semibold">
           Top Episodes by {metricOptions.find(o => o.value === selectedMetric).label}
         </h3>
         <EpisodeChart {chartData} />
       </div>
-      <div class="card">
-        <h3 class="mb-4 text-lg font-semibold">Key Insights</h3>
-        <!-- static or dynamic insights -->
-      </div>
     </div>
-  
     <div class="card mt-6">
       <div class="flex justify-between mb-4">
         <h3 class="text-lg font-semibold">Episode List</h3>

@@ -45,7 +45,7 @@
               labels: {
                 color: '#CCCCCC',
                 font: {
-                  family: 'Inter'
+                  family: 'roboto'
                 }
               }
             },

@@ -83,7 +83,7 @@
         shapes,
         paper_bgcolor: 'transparent',
         plot_bgcolor: 'transparent',
-        font: { color: '#CCCCCC', family: 'Inter' },
+        font: { color: '#CCCCCC', family: 'roboto' },
         margin: { t: 70, r: 50, b: 70, l: 90 },
         legend: {
           x: 1,
