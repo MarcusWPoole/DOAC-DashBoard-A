@@ -22,7 +22,8 @@ A responsive Svelte front‑end with a FastAPI back‑end for exploring and anal
    ```terminal
    ./run-all.sh
 
-   Access at: http://127.0.0.1:5173/
+
+Access at: http://127.0.0.1:5173/
 
 
 
