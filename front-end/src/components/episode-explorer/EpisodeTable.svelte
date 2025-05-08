@@ -68,7 +68,32 @@
       if (page === '...' || page < 1 || page > totalPages || page === currentPage) return;
       onPageChange(page);
     }
+
+    function handleExport() {
+  const headers = ['Episode', 'Title', 'Guest', 'Date', 'Views'];
+  const rows = data.map(ep => [
+    ep.episode,
+    `"${ep.title.replace(/"/g, '""')}"`, // escape quotes
+    ep.guest || 'N/A',
+    formatDate(ep.date),
+    ep.views
+  ]);
+
+  const csvContent = [headers, ...rows]
+    .map(row => row.join(','))
+    .join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'episodes.csv');
+  link.click();
+}
   </script>
+  <div class="mb-4 flex justify-end">
+    <button class="btn btn-accent" on:click={handleExport}>Export Data</button>
+  </div>
   
   <div class="overflow-x-auto border rounded-lg">
     <table class="min-w-full table-fixed">
